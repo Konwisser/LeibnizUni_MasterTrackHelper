@@ -1,0 +1,115 @@
+package de.unihannover.dbs.mth.client.presenter;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
+import de.unihannover.dbs.mth.client.model.Kompetenzbereich;
+import de.unihannover.dbs.mth.client.model.Lehrveranstaltung;
+import de.unihannover.dbs.mth.client.model.Modul;
+import de.unihannover.dbs.mth.client.model.PruefbareEinheit;
+import de.unihannover.dbs.mth.client.model.Pruefung;
+import de.unihannover.dbs.mth.client.model.Semester;
+import de.unihannover.dbs.mth.client.model.Semesterangebot;
+
+
+public class LvFilters {
+	
+	public static interface LvFilter {
+
+		public boolean valid(Lehrveranstaltung lv);
+	}
+
+	public static class NotOverFilter implements LvFilter {
+
+		@Override
+		public boolean valid(Lehrveranstaltung lv) {
+
+			Semester gueltigBis = lv.getGueltigBis();
+
+			if (gueltigBis == null || gueltigBis.getJahr() == 0)
+				return true;
+
+			return gueltigBis.getJahr() >= 2013;
+		}
+
+	}
+
+	public static class UserSelectionFilter implements LvFilter {
+
+		private HashSet<Lehrveranstaltung> selected = new HashSet<Lehrveranstaltung>();
+
+
+		@Override
+		public boolean valid(Lehrveranstaltung lv) {
+
+			return selected.contains(lv);
+		}
+
+
+		public void setSelected(HashSet<Lehrveranstaltung> selected) {
+
+			this.selected = selected;
+		}
+	}
+
+	public static class HasKbFilter implements LvFilter {
+
+		@Override
+		public boolean valid(Lehrveranstaltung lv) {
+
+			return !lv.getKompetenzbereiche().isEmpty();
+		}
+
+	}
+
+	public static class OnlyMyNfFilter implements LvFilter {
+
+		@Override
+		public boolean valid(Lehrveranstaltung lv) {
+
+			Set<Kompetenzbereich> kbs = lv.getKompetenzbereiche();
+			if (kbs.isEmpty())
+				return true;
+
+			if (kbs.iterator().next().getId() != Kompetenzbereich.KB_NF_ID)
+				return true;
+
+			Modul modul = null;
+
+			for (PruefbareEinheit pe : lv.getPruefbareEinheiten())
+				for (Pruefung p : pe.getPruefungen())
+					modul = p.getModul();
+
+			if (modul == null)
+				return false;
+
+			return modul.getName().equals(
+					"Master-Nebenfachmodul Kartographie und Fernerkundung");
+		}
+	}
+
+	public static class NoKlausurFilter implements LvFilter {
+
+		@Override
+		public boolean valid(Lehrveranstaltung lv) {
+
+			Semesterangebot lastAngebot = lv.getLastAngebot();
+
+			return !lastAngebot.getPruefungsArt().toLowerCase()
+					.startsWith("klausur");
+		}
+	}
+
+	public static class BrueggemannFilter implements LvFilter {
+
+		@Override
+		public boolean valid(Lehrveranstaltung lv) {
+
+			Semesterangebot lastAngebot = lv.getLastAngebot();
+			return !lastAngebot.getPruefer().toLowerCase()
+					.startsWith("brüggemann");
+		}
+	}
+}

@@ -1,0 +1,27 @@
+package de.unihannover.dbs.mth.client;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URISyntaxException;
+import java.net.URL;
+
+public class Modkat {
+	public static void main(String[] args) throws URISyntaxException,
+			IOException {
+		URL modkatUrl = new URL(
+				"http://www.dbs.uni-hannover.de/~konwisser/export.php?csvexport=modkatexport");
+		modkatUrl.openConnection();
+		InputStream inputStream = modkatUrl.openStream();
+
+		BufferedReader br = new BufferedReader(new InputStreamReader(
+				inputStream, "ISO-8859-1"));
+
+		while (br.ready())
+			System.out.println(br.readLine());
+
+		br.close();
+		inputStream.close();
+	}
+}

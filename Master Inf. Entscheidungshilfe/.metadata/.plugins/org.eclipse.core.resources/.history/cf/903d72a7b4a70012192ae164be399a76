@@ -1,0 +1,157 @@
+package de.unihannover.dbs.mth.client.presenter;
+
+
+import java.util.Collection;
+import java.util.HashMap;
+
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.event.logical.shared.ValueChangeEvent;
+import com.google.gwt.event.logical.shared.ValueChangeHandler;
+import com.google.gwt.user.client.Command;
+import com.google.gwt.user.client.History;
+import com.google.gwt.user.client.Timer;
+import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.rpc.AsyncCallback;
+
+import de.unihannover.dbs.mth.client.ModkatRS;
+import de.unihannover.dbs.mth.client.logic.ModkatParser;
+import de.unihannover.dbs.mth.client.presenter.HistoryTools.NoSuchPageException;
+import de.unihannover.dbs.mth.client.presenter.HistoryTools.Page;
+import de.unihannover.dbs.mth.client.presenter.HistoryTools.PageAndArgs;
+import de.unihannover.dbs.mth.client.view.View;
+
+
+public class MTHPresenter {
+
+	public static interface PagePresenter {
+
+		public void showView(PageAndArgs pageAndArgs);
+	}
+
+
+	public static void init() {
+
+		instance = new MTHPresenter();
+		View.init();
+
+		loadDataFromServer();
+	}
+
+
+	private static void loadDataFromServer() {
+
+		View.get().setStatusText(
+				"Schritt 1 von 3: empfange aktuelle Daten vom Modulkatalog");
+		ModkatRS.Util.getInstance().getData(new CSVDataCallback());
+	}
+
+	private static MTHPresenter instance;
+
+
+	public static MTHPresenter get() {
+
+		return instance;
+	}
+
+	private HashMap<Page, PagePresenter> pagePresenters;
+
+
+	private MTHPresenter() {
+
+		History.addValueChangeHandler(new MTHHistoryChangeHandler());
+
+		pagePresenters = new HashMap<Page, PagePresenter>();
+		pagePresenters.put(Page.interestSelection,
+				new InterestSelPresenterImpl());
+		pagePresenters.put(Page.recommendations,
+				new RecommendationPresenterImpl());
+	}
+
+	private class MTHHistoryChangeHandler implements ValueChangeHandler<String> {
+
+		@Override
+		public void onValueChange(ValueChangeEvent<String> event) {
+
+			handleHistoryToken(event.getValue());
+		}
+
+	}
+
+
+	public void toPage(Page token) {
+
+		History.newItem(token.name(), true);
+	}
+
+	private static class CSVDataCallback implements
+			AsyncCallback<Collection<String>> {
+
+		@Override
+		public void onSuccess(final Collection<String> csvLines) {
+
+			MTHPresenter.get().finishedLoadingFromServer(csvLines);
+		}
+
+
+		@Override
+		public void onFailure(Throwable caught) {
+
+			System.err.println("failed to get data from server");
+			// TODO do something reasonable
+		}
+	}
+
+
+	private void finishedLoadingFromServer(final Collection<String> csvLines) {
+
+		View.get()
+				.setStatusText("Schritt 2 von 3: verarbeite empfangene Daten");
+
+		// without this delay the status text won't be shown
+		new Timer() {
+
+			@Override
+			public void run() {
+
+				ModkatParser.parseCSV(csvLines);
+				finishedParsing();
+			}
+		}.schedule(100);
+	}
+
+
+	private void finishedParsing() {
+
+		View.get().setStatusText("Schritt 3 von 3: baue Seiteninhalte auf");
+
+		String historyToken = History.getToken();
+
+		if (historyToken.isEmpty())
+			toPage(Page.interestSelection);
+		else
+			handleHistoryToken(historyToken);
+	}
+
+
+	private void handleHistoryToken(String historyToken) {
+
+		if (historyToken.isEmpty()) {
+			loadDataFromServer();
+			return;
+		}
+
+		try {
+			PageAndArgs pageAndArgs = HistoryTools
+					.parseHistoryToken(historyToken);
+
+			PagePresenter presenter = pagePresenters.get(pageAndArgs.getPage());
+			presenter.showView(pageAndArgs);
+
+		} catch (NoSuchPageException e) {
+			Window.alert("Die angefragte Seite ist ungültig. "
+					+ "Sie werden nun zur Startseite weitergeleitet");
+			toPage(Page.interestSelection);
+		}
+	}
+
+}

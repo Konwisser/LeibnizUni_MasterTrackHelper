@@ -1,0 +1,451 @@
+package de.unihannover.dbs.mth.client.logic.recommendation;
+
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import de.unihannover.dbs.mth.client.logic.StringTools;
+import de.unihannover.dbs.mth.client.logic.recommendation.PairIterator.Pair;
+import de.unihannover.dbs.mth.client.model.Kompetenzbereich;
+import de.unihannover.dbs.mth.client.model.Lehrveranstaltung;
+import de.unihannover.dbs.mth.client.model.Lehrveranstaltung.NoPruefbareEinheitException;
+import de.unihannover.dbs.mth.client.model.Lehrveranstaltung.NoPruefungException;
+import de.unihannover.dbs.mth.client.model.ModkatFactory.Leistung;
+import de.unihannover.dbs.mth.client.model.ModkatFactory;
+
+
+public class RecommendationProvider {
+
+	private class KkbWahlComparator implements Comparator<KkbWahl> {
+
+		@Override
+		public int compare(KkbWahl w1, KkbWahl w2) {
+
+			/*
+			 * Prüfe, ob beide Wahlen möglich sind und bevorzuge eine Wahl,
+			 * falls nur diese die Anforderungen erfüllt
+			 */
+			if (w1.isPossible() && !w2.isPossible())
+				return -1;
+			if (!w1.isPossible() && w2.isPossible())
+				return 1;
+
+			/*
+			 * Bevorzuge die Wahl, die insg. die meisten Leistungspunkte bringen
+			 * könnte
+			 */
+			return getLpTotal(w2) - getLpTotal(w1);
+		}
+	}
+
+	private List<KkbWahl> rankedKkbWahlen;
+
+	/**
+	 * Jeweils die Anzahl der Leistungspunkte, die bereits in einem KKB oder im
+	 * KB_IG in einem Modul erbracht wurden, welches kein Seminar-, Labor- oder
+	 * Projektmodul erbracht wurde
+	 */
+	private HashMap<Kompetenzbereich, Integer> kbToTheoryLp;
+
+	/**
+	 * Jeweils die Anzahl der Leistungspunkte, die bereits in einem KKB oder im
+	 * KB_IG oder im KB_BPr in einem Betriebspraktikum-, Seminar-, Labor- oder
+	 * Projektmodul erbracht wurde
+	 */
+	private HashMap<Kompetenzbereich, Integer> kbToPraxisLp;
+
+	private Set<Lehrveranstaltung> lvsOfInterest;
+
+	private HashMap<Kompetenzbereich, HashSet<Lehrveranstaltung>> lvsDone;
+
+
+	public RecommendationProvider(Set<Lehrveranstaltung> lvsOfInterest,
+			HashMap<Kompetenzbereich, HashSet<Lehrveranstaltung>> lvsDone) {
+
+		this.lvsOfInterest = lvsOfInterest;
+		this.lvsDone = lvsDone;
+
+		kbToTheoryLp = new HashMap<Kompetenzbereich, Integer>();
+		kbToPraxisLp = new HashMap<Kompetenzbereich, Integer>();
+
+		for (Kompetenzbereich kb : ModkatFactory.get().getAll(
+				Kompetenzbereich.class)) {
+			kbToTheoryLp.put(kb, 0);
+			kbToPraxisLp.put(kb, 0);
+		}
+
+		rankedKkbWahlen = new ArrayList<KkbWahl>();
+
+		fillDataAndCalc();
+	}
+
+
+	private void fillDataAndCalc() {
+
+		calcLpSums();
+
+		List<Kompetenzbereich> wahlpflichtKKBs = ModkatFactory.get()
+				.getWahlpflichtKKBs();
+
+		rankedKkbWahlen.addAll(generateAll2kkbWahlen(wahlpflichtKKBs,
+				lvsOfInterest));
+		rankedKkbWahlen.addAll(generateAll3kkbWahlen(wahlpflichtKKBs,
+				lvsOfInterest));
+
+		checkRegularities(rankedKkbWahlen);
+
+		sortAndAddRanking(rankedKkbWahlen);
+	}
+
+
+	private void checkRegularities(List<KkbWahl> allKkbWahlen) {
+
+		for (KkbWahl w : allKkbWahlen) {
+
+			w.setPossible(true);
+
+			checkMinLpOfKkb(w);
+
+			/*
+			 * Prüfe, ob die Wahl die Mindestanforderung an Praxis
+			 * (Betriebspraktikum, Seminar-, Labor- und Projektmoduleen) und LP
+			 * Summe aus KKB, Informatik-Grundlagen und
+			 * Informatik-Betriebspraktikum erfüllt
+			 */
+
+			int lpTheory = getLpTheory(w);
+			int lpPraxisNormed = Math.min(getLpPraxis(w),
+					ModkatFactory.MAX_KKB_IG_BPr_PRAXIS_LP);
+
+			if (lpPraxisNormed < ModkatFactory.MIN_KKB_IG_BPr_PRAXIS_LP) {
+				w.setPossible(false);
+				w.addComment(StringTools
+						.format("die Summe der LP aus Betriebspraktikum, Seminar-, Labor- und Projektmodulen "
+								+ "(momentan %%% LP) muss mindestens %%% LP betragen",
+								lpPraxisNormed,
+								ModkatFactory.MIN_KKB_IG_BPr_PRAXIS_LP));
+			}
+
+			int normedLpSum = lpPraxisNormed + lpTheory;
+			if (normedLpSum < ModkatFactory.MIN_KKB_IG_BPr_LP) {
+				w.setPossible(false);
+				w.addComment(StringTools
+						.format("die Summe der LP aus den KKBen, Informatik-Grundlagen "
+								+ "und Betriebspraktikum (momentan %%% LP) muss mindestens "
+								+ "%%% LP betragen (wobei maximal %%% LP aus Betriebspraktikum, "
+								+ "Seminar-, Labor- und Projektmodulen erlaubt sind)",
+								normedLpSum, ModkatFactory.MIN_KKB_IG_BPr_LP,
+								ModkatFactory.MAX_KKB_IG_BPr_PRAXIS_LP));
+			}
+		}
+	}
+
+
+	private void checkMinLpOfKkb(KkbWahl w) {
+
+		/*
+		 * Prüfe, ob die Wahl alle Mindestanforderungen an die einzelnen
+		 * Kernkompetenzbereiche erfüllt
+		 */
+		for (Kompetenzbereich kkb : w.getKkbs())
+			if (!isMinLpOK(w, kkb)) {
+				int lp = getLpNotShared(w, kkb) + getLpShared(w, kkb);
+				w.setPossible(false);
+				w.addComment(StringTools
+						.format("die Summe der LP im %%% (momentan %%% LP) muss mindestens %%% LP betragen",
+								kkb.getName(), lp, kkb.getMinLP()));
+			}
+
+		/*
+		 * Prüfe, ob das Erfüllen der Mindestanforderung eines KKB nicht das
+		 * Erfüllen der Mindestanforderung an ein anderes KKB ausschließt und
+		 * füge nur dann einen Kommentar hinzu, wenn beide KKBe für sich
+		 * genommen erfüllt werden können
+		 */
+		ArrayList<Kompetenzbereich> kkbList;
+		kkbList = new ArrayList<Kompetenzbereich>(w.getKkbs());
+		PairIterator<Kompetenzbereich> it = new PairIterator<Kompetenzbereich>(
+				kkbList);
+
+		while (it.hasNext()) {
+			Pair<Kompetenzbereich> pair = it.next();
+			Kompetenzbereich kkb1 = pair.get1();
+			Kompetenzbereich kkb2 = pair.get2();
+
+			if (isMinLpOK(w, kkb1) && isMinLpOK(w, kkb2)
+					&& !isMinLpOfPairOK(w, kkb1, kkb2)) {
+
+				int lp = getLpNotShared(w, kkb1) + getLpNotShared(w, kkb2)
+						+ sum(w.getLpShared(kkb1, kkb2));
+
+				w.setPossible(false);
+				w.addComment(StringTools
+						.format("die Summe der LP in %%% und %%% (momentan %%%+%%%+%%%=%%% LP) "
+								+ "muss insg. mindestens %%%+%%%=%%% LP betragen",
+								kkb1.getName(), kkb2.getName(),
+								getLpNotSharedNormed(w, kkb1),
+								getLpNotSharedNormed(w, kkb2),
+								w.getLpShared(kkb1, kkb2), lp, kkb1.getMinLP(),
+								kkb2.getMinLP(),
+								kkb1.getMinLP() + kkb2.getMinLP()));
+			}
+		}
+	}
+
+
+	private boolean isMinLpOfPairOK(KkbWahl w, Kompetenzbereich kkb1,
+			Kompetenzbereich kkb2) {
+
+		int lpNormedOfPair = getLpNormedOfPair(w, kkb1, kkb2);
+
+		return kkb1.getMinLP() + kkb2.getMinLP() <= lpNormedOfPair;
+	}
+
+
+	private int getLpNormedOfPair(KkbWahl w, Kompetenzbereich kkb1,
+			Kompetenzbereich kkb2) {
+
+		int normed1 = getLpNotSharedNormed(w, kkb1);
+		int normed2 = getLpNotSharedNormed(w, kkb2);
+
+		int lpMaxOfPair = kkb1.getMaxLP() + kkb2.getMaxLP();
+		int lpNormedOfPair = normed1 + normed2 + sum(w.getLpShared(kkb1, kkb2));
+		lpNormedOfPair = Math.min(lpNormedOfPair, lpMaxOfPair);
+		return lpNormedOfPair;
+	}
+
+
+	private int getLpNotSharedNormed(KkbWahl w, Kompetenzbereich kkb) {
+
+		return Math.min(getLpNotShared(w, kkb), kkb.getMaxLP());
+	}
+
+
+	private boolean isMinLpOK(KkbWahl w, Kompetenzbereich kkb) {
+
+		Integer[] lps = w.getLpShared(kkb);
+		return kkb.getMinLP() <= getLpNotShared(w, kkb) + lps[0] + lps[1];
+	}
+
+
+	private void calcLpSums() {
+
+		for (Kompetenzbereich kb : lvsDone.keySet()) {
+
+			if (kb.getId() != Kompetenzbereich.KB_NF_ID
+					&& kb.getId() != Kompetenzbereich.KB_MA_ID)
+				addToKbLpSums(kb, lvsDone.get(kb));
+		}
+
+		for (Lehrveranstaltung lv : lvsOfInterest) {
+			Set<Kompetenzbereich> kbs = lv.getKompetenzbereiche();
+
+			if (kbs.size() != 1)
+				continue;
+
+			Kompetenzbereich kb = kbs.iterator().next();
+			if (kb.getId() == Kompetenzbereich.KB_IG_ID
+					|| kb.getId() == Kompetenzbereich.KB_BPr_ID)
+				addToKbLpSums(kb, Collections.singleton(lv));
+			// TODO do it more efficiently
+		}
+	}
+
+
+	private void addToKbLpSums(Kompetenzbereich kb, Set<Lehrveranstaltung> lvs) {
+
+		int lpTheorySum = kbToTheoryLp.get(kb);
+		int lpPraxisSum = kbToPraxisLp.get(kb);
+
+		for (Lehrveranstaltung lv : lvs) {
+			int lp = 0;
+			try {
+				lp = lv.getLeistungspunkte();
+			} catch (NoPruefbareEinheitException e) {
+				continue;
+			}
+			if (lv.isPraktikumSeminarLaborProjekt())
+				lpPraxisSum += lp;
+			else
+				lpTheorySum += lp;
+		}
+
+		kbToTheoryLp.put(kb, lpTheorySum);
+		kbToPraxisLp.put(kb, lpPraxisSum);
+	}
+
+
+	public List<KkbWahl> getRankedKKBWahlen() {
+
+		return rankedKkbWahlen;
+	}
+
+
+	private void sortAndAddRanking(List<KkbWahl> allKkbWahlen) {
+
+		Collections.sort(allKkbWahlen, new KkbWahlComparator());
+
+		for (int i = 0; i < allKkbWahlen.size(); i++) {
+			KkbWahl w = allKkbWahlen.get(i);
+			w.setRecommendationRanking(i);
+
+			if (!w.isPossible())
+				continue;
+
+			if (i == 0)
+				w.addComment("EMPFEHLUNG :D");
+			else
+				w.addComment("auch möglich :)");
+		}
+	}
+
+
+	private List<KkbWahl> generateAll2kkbWahlen(
+			List<Kompetenzbereich> wahlpflichtKKBs, Set<Lehrveranstaltung> lvs) {
+
+		ArrayList<KkbWahl> result = new ArrayList<KkbWahl>();
+		PairIterator<Kompetenzbereich> it = new PairIterator<Kompetenzbereich>(
+				wahlpflichtKKBs);
+
+		Kompetenzbereich kkbThI = ModkatFactory.get().get(
+				Kompetenzbereich.class, Kompetenzbereich.KKB_ThI_ID);
+
+		while (it.hasNext()) {
+			Pair<Kompetenzbereich> pair = it.next();
+
+			Set<Kompetenzbereich> kkbs = new HashSet<Kompetenzbereich>(
+					Arrays.asList(kkbThI, pair.get1(), pair.get2()));
+
+			result.add(new KkbWahl(kkbs, lvs));
+		}
+
+		return result;
+	}
+
+
+	private Collection<? extends KkbWahl> generateAll3kkbWahlen(
+			List<Kompetenzbereich> wahlpflichtKKBs, Set<Lehrveranstaltung> lvs) {
+
+		ArrayList<KkbWahl> result = new ArrayList<KkbWahl>();
+
+		Kompetenzbereich kkbThI = ModkatFactory.get().get(
+				Kompetenzbereich.class, Kompetenzbereich.KKB_ThI_ID);
+
+		for (int i1 = 0; i1 < wahlpflichtKKBs.size() - 2; i1++) {
+			for (int i2 = i1 + 1; i2 < wahlpflichtKKBs.size() - 1; i2++) {
+				for (int i3 = i2 + 1; i3 < wahlpflichtKKBs.size(); i3++) {
+					Kompetenzbereich kkb1 = wahlpflichtKKBs.get(i1);
+					Kompetenzbereich kkb2 = wahlpflichtKKBs.get(i2);
+					Kompetenzbereich kkb3 = wahlpflichtKKBs.get(i3);
+
+					Set<Kompetenzbereich> kkbs = new HashSet<Kompetenzbereich>(
+							Arrays.asList(kkbThI, kkb1, kkb2, kkb3));
+
+					result.add(new KkbWahl(kkbs, lvs));
+				}
+			}
+		}
+
+		return result;
+	}
+
+
+	public int getLpShared(KkbWahl wahl, Kompetenzbereich kb) {
+
+		return sum(wahl.getLpShared(kb));
+	}
+
+
+	public int getLpNotShared(KkbWahl wahl, Kompetenzbereich kb) {
+
+		if (!wahl.getKkbs().contains(kb))
+			return 0;
+
+		return kbToTheoryLp.get(kb) + kbToPraxisLp.get(kb)
+				+ sum(wahl.getLpNotShared(kb));
+	}
+
+
+	public int getLpTheory(KkbWahl wahl) {
+
+		int result = wahl.getLpTheory();
+
+		for (Kompetenzbereich kb : kbToTheoryLp.keySet())
+			if (!kb.isKkb() || wahl.getKkbs().contains(kb))
+				result += kbToTheoryLp.get(kb);
+
+		return result;
+	}
+
+
+	public int getLpPraxis(KkbWahl wahl) {
+
+		int result = wahl.getLpPraxis();
+
+		for (Kompetenzbereich kb : kbToPraxisLp.keySet())
+			if (!kb.isKkb() || wahl.getKkbs().contains(kb))
+				result += kbToPraxisLp.get(kb);
+
+		return result;
+	}
+
+
+	private int getLpNormed(KkbWahl wahl) {
+
+		int result = 0;
+
+		/*
+		 * calculate normed lps for each KKB-Pair in wahl using the normed not
+		 * shared lps of each KKB in wahl
+		 */
+
+		PairIterator<Kompetenzbereich> it = new PairIterator<Kompetenzbereich>(
+				new ArrayList<Kompetenzbereich>(wahl.getKkbs()));
+
+		while (it.hasNext()) {
+			Pair<Kompetenzbereich> pair = it.next();
+
+			result += getLpNormedOfPair(wahl, pair.get1(), pair.get2());
+		}
+
+		/*
+		 * add the normed lps of KKB_IG and KKB_Bpr
+		 */
+
+		Kompetenzbereich kkb_IG = ModkatFactory.get().get(
+				Kompetenzbereich.class, Kompetenzbereich.KB_IG_ID);
+		Kompetenzbereich kkb_BPr = ModkatFactory.get().get(
+				Kompetenzbereich.class, Kompetenzbereich.KB_BPr_ID);
+
+		for (Kompetenzbereich kb : Arrays.asList(kkb_IG, kkb_BPr)) {
+			int lpSumOfKb = kbToTheoryLp.get(kb) + kbToPraxisLp.get(kb);
+			result += Math.min(lpSumOfKb, kb.getMaxLP());
+		}
+
+		return result;
+	}
+
+
+	public int getLpTotal(KkbWahl wahl) {
+
+		return getLpTheory(wahl) + getLpPraxis(wahl);
+	}
+
+
+	private int sum(Integer[] values) {
+
+		int result = 0;
+
+		for (int i = 0; i < values.length; i++)
+			result += values[i];
+
+		return result;
+	}
+}

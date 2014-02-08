@@ -1,0 +1,57 @@
+package de.unihannover.dbs.mth.client.model;
+
+import java.util.HashSet;
+import java.util.Set;
+
+import de.unihannover.dbs.mth.client.model.ModkatFactory.SemesterZeit;
+
+public class Semester {
+
+	private final long id;
+
+	private int jahr;
+
+	/**
+	 * 'Winter' oder 'Sommer'
+	 */
+	private SemesterZeit jahreszeit;
+
+	/**
+	 * Semesterangebote in diesem Semester
+	 */
+	private Set<Semesterangebot> angebote;
+
+	Semester(long id) {
+		this.id = id;
+		this.angebote = new HashSet<Semesterangebot>();
+	}
+
+	public int getJahr() {
+		return jahr;
+	}
+
+	public void setJahr(int jahr) {
+		this.jahr = jahr;
+	}
+
+	public SemesterZeit getJahreszeit() {
+		return jahreszeit;
+	}
+
+	public void setJahreszeit(SemesterZeit jahreszeit) {
+		this.jahreszeit = jahreszeit;
+	}
+
+	public long getId() {
+		return id;
+	}
+
+	public Set<Semesterangebot> getAngebote() {
+		return angebote;
+	}
+	
+	@Override
+	public String toString() {
+		return jahr + " " + jahreszeit;
+	}
+}

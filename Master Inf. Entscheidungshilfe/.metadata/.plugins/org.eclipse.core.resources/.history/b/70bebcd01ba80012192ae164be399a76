@@ -1,0 +1,354 @@
+package de.unihannover.dbs.mth.client.logic.recommendation;
+
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import de.unihannover.dbs.mth.client.logic.recommendation.PairIterator.Pair;
+import de.unihannover.dbs.mth.client.model.Kompetenzbereich;
+import de.unihannover.dbs.mth.client.model.Lehrveranstaltung;
+import de.unihannover.dbs.mth.client.model.Lehrveranstaltung.NoPruefbareEinheitException;
+import de.unihannover.dbs.mth.client.model.Lehrveranstaltung.NoPruefungException;
+import de.unihannover.dbs.mth.client.model.ModkatFactory.Leistung;
+
+
+public class KkbWahl {
+
+	private Set<Kompetenzbereich> kkbs;
+
+	private int lpPraxis;
+	private int lpTheory;
+
+	/**
+	 * index=0 -> theory, index=1 -> praxis
+	 */
+	private HashMap<Kompetenzbereich, Integer[]> lpInOneKkb;
+
+	/**
+	 * index=0 -> theory, index=1 -> praxis
+	 */
+	private HashMap<Kompetenzbereich, Integer[]> lpShared;
+
+	/**
+	 * Der Schlüssel ergibt sich durch
+	 * {@link #generateKey(Kompetenzbereich, Kompetenzbereich)} aus den IDs der
+	 * Kernkompetenzbereiche
+	 * 
+	 * index=0 -> theory, index=1 -> praxis
+	 */
+	private HashMap<String, Integer[]> lpInTwoKkb;
+
+	private int recommendationRanking = 0;
+
+	private Set<Lehrveranstaltung> lvsInMinOneKkb;
+
+	private boolean possible;
+
+	private List<String> comments;
+
+
+	/**
+	 * Bei der Erstellung werden die angegebenen Lehrveranstaltungen
+	 * durchgeschaut und disjunkte Mengen aufgeteilt, die die Zuordnungen der
+	 * Lehrveranstaltungen zu allen Teilmengen der gegebenen Menge von
+	 * Kernkompetenzbereichen darstellen.
+	 * <p>
+	 * Lehrveranstaltungen in <code>lvs</code>, die zu keinem der
+	 * Kernkompetenzbereiche gehören, werden ignoriert.
+	 * 
+	 * @param kkbs
+	 * @param lvs
+	 */
+	public KkbWahl(Set<Kompetenzbereich> kkbs, Set<Lehrveranstaltung> lvs) {
+
+		this.kkbs = kkbs;
+
+		comments = new ArrayList<String>();
+
+		initMaps();
+
+		lpTheory = 0;
+		lpPraxis = 0;
+
+		analyze(lvs);
+	}
+
+
+	private void initMaps() {
+
+		lvsInMinOneKkb = new HashSet<Lehrveranstaltung>();
+
+		lpInOneKkb = new HashMap<Kompetenzbereich, Integer[]>();
+		lpInTwoKkb = new HashMap<String, Integer[]>();
+		lpShared = new HashMap<Kompetenzbereich, Integer[]>();
+
+		for (Kompetenzbereich kkb : kkbs) {
+			lpInOneKkb.put(kkb, new Integer[] { 0, 0 });
+			lpShared.put(kkb, new Integer[] { 0, 0 });
+		}
+
+		ArrayList<Kompetenzbereich> kkbList;
+		kkbList = new ArrayList<Kompetenzbereich>(kkbs);
+		PairIterator<Kompetenzbereich> it = new PairIterator<Kompetenzbereich>(
+				kkbList);
+		while (it.hasNext()) {
+			Pair<Kompetenzbereich> pair = it.next();
+			String key = generateKey(pair.get1(), pair.get2());
+			lpInTwoKkb.put(key, new Integer[] { 0, 0 });
+		}
+	}
+
+
+	private <T> Set<T> intersect(Set<T> set1, Set<T> set2) {
+
+		if (set1.size() > set2.size()) {
+			Set<T> temp = set1;
+			set1 = set2;
+			set2 = temp;
+		}
+
+		HashSet<T> result = new HashSet<T>();
+		for (T el : set1)
+			if (set2.contains(el))
+				result.add(el);
+
+		return result;
+	}
+
+
+	/**
+	 * adds each integer from <code>increment</code> to the integers returned by
+	 * <code>map</code> using <code>key</code> and stores the result under the
+	 * same key in the same map
+	 * 
+	 * @param map
+	 *            contains sets of integers as values
+	 * @param key
+	 *            leads to the set of integers to be incremented
+	 * @param increment
+	 *            a set of integers with the same length as the set returned by
+	 *            <code>map</code> using <code>key</code>
+	 */
+	private <T> void increment(Map<T, Integer[]> map, T key, int increment[]) {
+
+		Integer[] values = map.get(key);
+
+		for (int i = 0; i < values.length; i++)
+			values[i] += increment[i];
+
+		map.put(key, values);
+	}
+
+
+	private void analyze(Set<Lehrveranstaltung> lvs) {
+
+		HashSet<Kompetenzbereich> myKkbSet = new HashSet<Kompetenzbereich>(kkbs);
+
+		for (Lehrveranstaltung lv : lvs) {
+
+			Set<Kompetenzbereich> myKkbsInLv = intersect(myKkbSet,
+					lv.getKompetenzbereiche());
+
+			if (myKkbsInLv.isEmpty())
+				continue;
+			else if (myKkbsInLv.size() == 1)
+				inOneOfMyKkbs(lv, myKkbsInLv.iterator().next());
+			else
+				inTwoOfMyKkbs(lv);
+
+			lvsInMinOneKkb.add(lv);
+
+			try {
+				int lp = lv.getLeistungspunkte();
+				if (lv.isPraktikumSeminarLaborProjekt())
+					lpPraxis += lp;
+				else
+					lpTheory += lp;
+			} catch (NoPruefbareEinheitException e) {
+				continue;
+			}
+		}
+	}
+
+
+	private void inOneOfMyKkbs(Lehrveranstaltung lv, Kompetenzbereich myKkb) {
+
+		try {
+			increment(lpInOneKkb, myKkb, getTheoryPraxisLps(lv));
+		} catch (NoPruefbareEinheitException e) {
+			return;
+		}
+	}
+
+
+	private int[] getTheoryPraxisLps(Lehrveranstaltung lv)
+			throws NoPruefbareEinheitException {
+
+		int lp = lv.getLeistungspunkte();
+		int[] lps;
+		if (lv.isPraktikumSeminarLaborProjekt())
+			lps = new int[] { 0, lp };
+		else
+			lps = new int[] { lp, 0 };
+		return lps;
+	}
+
+
+	private void inTwoOfMyKkbs(Lehrveranstaltung lv) {
+
+		int[] lps;
+
+		try {
+			lps = getTheoryPraxisLps(lv);
+		} catch (NoPruefbareEinheitException e) {
+			return;
+		}
+
+		Iterator<Kompetenzbereich> it = lv.getKompetenzbereiche().iterator();
+		Kompetenzbereich lvKkb1 = it.next();
+		Kompetenzbereich lvKkb2 = it.next();
+
+		increment(lpInTwoKkb, generateKey(lvKkb1, lvKkb2), lps);
+		increment(lpShared, lvKkb1, lps);
+		increment(lpShared, lvKkb2, lps);
+	}
+
+
+	private String generateKey(Kompetenzbereich kkb1, Kompetenzbereich kkb2) {
+
+		if (kkb1.getId() < kkb2.getId())
+			return kkb1.getId() + "," + kkb2.getId();
+		else
+			return kkb2.getId() + "," + kkb1.getId();
+	}
+
+
+	/**
+	 * Je kleiner desto empfehlenswerter
+	 * 
+	 * @return Position beim Ranking
+	 */
+	public int getRecommendationRanking() {
+
+		return recommendationRanking;
+	}
+
+
+	void setRecommendationRanking(int recommendationRanking) {
+
+		this.recommendationRanking = recommendationRanking;
+	}
+
+
+	public Set<Kompetenzbereich> getKkbs() {
+
+		return kkbs;
+	}
+
+
+	public int getLpPraxis() {
+
+		return lpPraxis;
+	}
+
+
+	public int getLpTheory() {
+
+		return lpTheory;
+	}
+
+
+	public Set<Lehrveranstaltung> getLvsInMinOneKkb() {
+
+		return lvsInMinOneKkb;
+	}
+
+
+	public boolean isPossible() {
+
+		return possible;
+	}
+
+
+	void setPossible(boolean possible) {
+
+		this.possible = possible;
+	}
+
+
+	public List<String> getComments() {
+
+		return comments;
+	}
+
+
+	void addComment(String comment) {
+
+		comments.add(comment);
+	}
+
+
+	/**
+	 * Gibt die Summe der Leistungspunkte an, die mit dieser Wahl allein durch
+	 * den angegebenen Kompetenzbereich erreicht werden kann. D.h. alle LP, die
+	 * aus Lehrveranstaltungen stammen, die bei dieser Wahl zwei KKBen
+	 * zugeordnet sind, werden nicht mitgezählt.
+	 * 
+	 * @param kkb
+	 *            Kernkompetenzbereich, dessen Theorie-LP ermittelt werden
+	 *            sollen
+	 * @return {Theorie-LP, Praxis-LP} des <code>kkb</code>
+	 *         <p>
+	 *         Theorie-LP bezeichnet hierbei Leistungspunkte aus
+	 *         KKB-Lehrveranstaltungen, die nicht in einem Betriebspraktikum-,
+	 *         Labor-, Seminar- oder Projektmodul sind, wogegen Praxis-LP gerade die LP aus Betriebspraktikum-,
+	 *         Labor-, Seminar- und Projektmodulen bezeichnet.
+	 * 
+	 */
+	public Integer[] getLp(Kompetenzbereich kkb) {
+
+		if (!kkbs.contains(kkb))
+			return new Integer[] { 0, 0 };
+		return lpInOneKkb.get(kkb);
+	}
+
+
+	/**
+	 * Gibt die Summe an Leistungspunkten an, die der angegebene
+	 * Kompetenzbereich bei dieser Wahl mit einem anderen KKB teilt.
+	 * 
+	 * @param kkb
+	 *            Kernkompetenzbereich, dessen geteilte LP ermittelt werden
+	 *            sollen
+	 * @return geteilte LP des <code>kkb</code>
+	 */
+	public int getSharedLp(Kompetenzbereich kkb) {
+
+		if (!kkbs.contains(kkb))
+			return 0;
+		return lpShared.get(kkb);
+	}
+
+
+	/**
+	 * Gibt die Summe an Leistungspunkten an, die die angegebenen
+	 * Kompetenzbereiche bei dieser Wahl mit einander teilen.
+	 * 
+	 * @param kkb1
+	 * @param kkb2
+	 * @return
+	 */
+	public int getSharedLp(Kompetenzbereich kkb1, Kompetenzbereich kkb2) {
+
+		if (!kkbs.contains(kkb1) || !kkbs.contains(kkb2))
+			return 0;
+		return lpInTwoKkb.get(generateKey(kkb1, kkb2));
+	}
+
+}

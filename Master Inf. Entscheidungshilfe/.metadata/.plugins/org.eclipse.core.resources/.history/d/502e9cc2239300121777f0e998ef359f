@@ -1,0 +1,33 @@
+package de.unihannover.dbs.mth.client.gui;
+
+import java.beans.Beans;
+
+import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.DisclosurePanel;
+import com.google.gwt.user.client.ui.Label;
+
+import de.unihannover.dbs.mth.client.modkat.Lehrveranstaltung;
+
+public class LehrveranstaltungCell extends Composite {
+
+	public LehrveranstaltungCell(Lehrveranstaltung lv) {
+
+		String headerText;
+		if (Beans.isDesignTime())
+			headerText = "[Name der Lehrveranstaltung]";
+		else if (lv.getTitel().equals(lv.getEnglishTitle()))
+			headerText = lv.getTitel();
+		else
+			headerText = lv.getTitel() + " / " + lv.getEnglishTitle();
+		
+		DisclosurePanel disclosurePanel = new DisclosurePanel(headerText);
+		disclosurePanel.setAnimationEnabled(true);
+		initWidget(disclosurePanel);
+		disclosurePanel.setSize("884px", "25px");
+
+		Label lbldetails = new Label("[Details]");
+		disclosurePanel.setContent(lbldetails);
+		lbldetails.setSize("433px", "133px");
+	}
+
+}

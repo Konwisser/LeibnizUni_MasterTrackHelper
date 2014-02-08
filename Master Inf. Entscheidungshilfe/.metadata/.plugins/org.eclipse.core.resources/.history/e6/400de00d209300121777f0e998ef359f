@@ -1,0 +1,50 @@
+package de.unihannover.dbs.mth.client.gui;
+
+import java.beans.Beans;
+
+import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.DockPanel;
+import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.VerticalPanel;
+import com.google.gwt.user.client.ui.ScrollPanel;
+
+public class MainFrame extends Composite {
+	private Label lblStatusContent;
+	private InterestSelectionTable interestSelectionTable;
+
+	public MainFrame() {
+
+		VerticalPanel verticalPanel = new VerticalPanel();
+		initWidget(verticalPanel);
+		verticalPanel.setSize("756px", "92px");
+
+		HorizontalPanel statusPanel = new HorizontalPanel();
+		statusPanel.setSpacing(5);
+		verticalPanel.add(statusPanel);
+
+		Label lblStatus = new Label("Status:");
+		lblStatus.setStyleName("definingLabel");
+		statusPanel.add(lblStatus);
+
+		lblStatusContent = new Label();
+		if (Beans.isDesignTime())
+			setStatusText("[empfange aktuelle Daten vom Modulkatalog]");
+		statusPanel.add(lblStatusContent);
+
+		ScrollPanel scrollPanel = new ScrollPanel();
+		verticalPanel.add(scrollPanel);
+
+		interestSelectionTable = new InterestSelectionTable();
+		scrollPanel.setWidget(interestSelectionTable);
+		interestSelectionTable.setSize("100%", "100%");
+	}
+
+	public void setStatusText(String text) {
+		lblStatusContent.setText(text);
+	}
+
+	public void fillTableData() {
+		interestSelectionTable.fillTableData();
+	}
+}

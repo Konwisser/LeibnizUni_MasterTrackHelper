@@ -1,0 +1,70 @@
+package de.unihannover.dbs.mth.client.presenter;
+
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
+
+import com.google.gwt.user.client.History;
+
+import de.unihannover.dbs.mth.client.logic.recommendation.RecommendationProvider;
+import de.unihannover.dbs.mth.client.model.Kompetenzbereich;
+import de.unihannover.dbs.mth.client.model.Lehrveranstaltung;
+import de.unihannover.dbs.mth.client.presenter.HistoryTools.MultiLvArg;
+import de.unihannover.dbs.mth.client.presenter.HistoryTools.Page;
+import de.unihannover.dbs.mth.client.presenter.HistoryTools.PageAndArgs;
+import de.unihannover.dbs.mth.client.presenter.MTHPresenter.PagePresenter;
+import de.unihannover.dbs.mth.client.view.RecommendationView;
+import de.unihannover.dbs.mth.client.view.View;
+import de.unihannover.dbs.mth.client.view.RecommendationView.RecommendationPresenter;
+
+
+public class RecommendationPresenterImpl implements RecommendationPresenter,
+		PagePresenter {
+
+	private PageAndArgs pageAndArgs;
+
+
+	@Override
+	public void btnBackToSelectionClicked() {
+
+		PageAndArgs interestSelPAA = pageAndArgs.copy();
+
+		interestSelPAA.setPage(Page.interestSelection);
+
+		String historyToken = HistoryTools.buildHistoryToken(interestSelPAA);
+
+		History.newItem(historyToken, true);
+	}
+
+
+	@Override
+	public void showView(PageAndArgs pageAndArgs) {
+
+		this.pageAndArgs = pageAndArgs;
+
+		HashSet<Lehrveranstaltung> lvs = new HashSet<Lehrveranstaltung>();
+
+		lvs.addAll(pageAndArgs.getLvs(MultiLvArg.lvsDoneInBachelor));
+		lvs.addAll(pageAndArgs.getLvs(MultiLvArg.lvsOfInterest));
+
+		// TODO die in bestimmten KKBen eingetragenen LVs ermitteln und statt
+		// null übergeben
+		HashMap<Kompetenzbereich, HashSet<Lehrveranstaltung>> lvsdoneInKKB;
+		lvsdoneInKKB = new HashMap<Kompetenzbereich, HashSet<Lehrveranstaltung>>();
+		
+		RecommendationProvider recommendation = new RecommendationProvider(lvs,
+				lvsdoneInKKB);
+
+		RecommendationView view = new RecommendationView(this, recommendation);
+
+		View.get().setBody(view);
+	}
+
+
+	@Override
+	public void finishedTableBuilding() {
+
+		View.get().setStatusText("fertig");
+	}
+}

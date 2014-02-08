@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring accessors="true" comment="Delete element from project &apos;ChooseMasterTrack&apos;&#x0A;- Original project: &apos;ChooseMasterTrack&apos;&#x0A;- Original element: &apos;ChooseMasterTrack/src/de.unihannover.dbs.choose_master_track.client&apos;" description="Delete element" element1="/src&lt;de.unihannover.dbs.choose_master_track.client" element2="/src&lt;de.unihannover.dbs.choose_master_track" element3="/src&lt;de.unihannover.dbs" element4="/src&lt;de.unihannover" elements="4" flags="589830" id="org.eclipse.jdt.ui.delete" resources="0" stamp="1363209185503" subPackages="false" version="1.0"/>
+</session>

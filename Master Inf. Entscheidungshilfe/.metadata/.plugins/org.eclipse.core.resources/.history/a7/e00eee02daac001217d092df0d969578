@@ -1,0 +1,58 @@
+html {
+	min-height: 100%;
+	position: relative;
+	padding-right: 0px;
+} /* make sure it is at least as tall as the viewport */
+
+body {
+	height: 100%
+}
+
+.h1 {
+	font-size: 2em;
+	font-weight: bold;
+	color: #777777;
+	margin: 40px 0px 40px;
+	text-align: center;
+}
+
+.tableHeader {
+	color: white;
+	font-size: 18px;
+	font-weight: normal;
+	letter-spacing: 1px;
+	background-color: #2062B8;
+}
+
+.table {
+	border: 1px solid silver;
+	padding: 2px;
+	margin-bottom: 6px;
+}
+
+.definingLabel {
+	color: #777777;
+	font-weight: bold;
+}
+
+.detailsTableHeader {
+	background-color: #777777;
+	color: white;
+}
+.fixed {
+	position:fixed;
+}
+
+.FlexTable-OddRow {
+	background-color: White;
+}
+
+.FlexTable-EvenRow {
+	background-color: lavender;
+}
+.marginRight {
+	margin-right: 10px;
+}
+.noMarginRight {
+	margin-right: 0px;
+}

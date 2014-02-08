@@ -1,0 +1,47 @@
+package de.unihannover.dbs.mth.client.logic.recommendation;
+
+
+import static org.junit.Assert.*;
+
+import java.io.IOException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+
+import org.junit.Before;
+import org.junit.Test;
+
+import de.unihannover.dbs.mth.client.TestTools;
+import de.unihannover.dbs.mth.client.model.Kompetenzbereich;
+
+
+public class RecommendationProviderTest {
+
+	@Before
+	public void before() throws IOException {
+
+		TestTools.fillModkat();
+	}
+
+
+	@Test
+	public void testKkbSelection() {
+
+		RecommendationProvider rec = new RecommendationProvider(
+				Collections.EMPTY_SET,
+				new HashMap<Kompetenzbereich, HashSet<Lehrveranstaltung>>());
+
+		assertEquals(20, rec.getRankedKKBWahlen().size());
+	}
+
+
+	@Test
+	public void testWithEmptyLvSet() {
+
+		RecommendationProvider rec = new RecommendationProvider(
+				Collections.EMPTY_SET);
+
+		assertEquals(20, rec.getRankedKKBWahlen().size());
+	}
+
+}

@@ -1,0 +1,328 @@
+package de.unihannover.dbs.mth.client.view;
+
+
+import java.beans.Beans;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Set;
+import java.util.TreeSet;
+
+import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.DisclosurePanel;
+import com.google.gwt.user.client.ui.Label;
+
+import de.unihannover.dbs.mth.client.model.Kompetenzbereich;
+import de.unihannover.dbs.mth.client.model.Lehrveranstaltung;
+import de.unihannover.dbs.mth.client.model.Modul;
+import de.unihannover.dbs.mth.client.model.PruefbareEinheit;
+import de.unihannover.dbs.mth.client.model.Pruefung;
+import de.unihannover.dbs.mth.client.model.Semester;
+import de.unihannover.dbs.mth.client.model.Semesterangebot;
+import de.unihannover.dbs.mth.client.model.Lehrveranstaltung.NoPruefbareEinheitException;
+import de.unihannover.dbs.mth.client.model.Lehrveranstaltung.NoPruefungException;
+import de.unihannover.dbs.mth.client.model.ModkatFactory.SemesterZeit;
+
+import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.VerticalPanel;
+import com.google.gwt.user.client.ui.FlexTable;
+import com.google.gwt.user.client.ui.InlineLabel;
+import com.google.gwt.user.client.ui.HasVerticalAlignment;
+import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.event.logical.shared.OpenHandler;
+import com.google.gwt.event.logical.shared.OpenEvent;
+
+
+public class LehrveranstaltungCell extends Composite {
+
+	private DisclosurePanel disclosurePanel;
+	private FlexTable semesterAngebotTable;
+	private Label lblBemerkungContent;
+	private Label lblFrequenzContent;
+	private HTML htmlKompetenzbereicheContent;
+	private HTML htmlLeistungContent;
+	private Lehrveranstaltung lv;
+	private HTML htmlModulContent;
+	private Label lblIdContent;
+
+
+	public LehrveranstaltungCell(final Lehrveranstaltung lv) {
+
+		this.lv = lv;
+
+		buildClosedGUI();
+
+		disclosurePanel.addOpenHandler(new OpenHandler<DisclosurePanel>() {
+
+			private boolean firstTimeOpened = true;
+
+
+			public void onOpen(OpenEvent<DisclosurePanel> event) {
+
+				if (!firstTimeOpened)
+					return;
+
+				firstTimeOpened = false;
+
+				buildDetailsGUI();
+				fillDetailsData(lv);
+			}
+		});
+
+		if (Beans.isDesignTime())
+			buildDetailsGUI();
+		else
+			setHeaderText(lv);
+	}
+
+
+	private void buildClosedGUI() {
+
+		disclosurePanel = new DisclosurePanel(
+				"[Deutscher Titel der LV / Englischer Titel der LV]");
+		disclosurePanel.setAnimationEnabled(true);
+		disclosurePanel.setSize("100%", "25px");
+		initWidget(disclosurePanel);
+	}
+
+
+	private void buildDetailsGUI() {
+
+		VerticalPanel verticalPanel = new VerticalPanel();
+		disclosurePanel.setContent(verticalPanel);
+		verticalPanel.setSize("100%", "10px");
+
+		buildLVDetailsGUI(verticalPanel);
+
+		buildSemesterangeboteGUI(verticalPanel);
+	}
+
+
+	private void buildLVDetailsGUI(VerticalPanel verticalPanel) {
+
+		FlexTable lvDetailsTable = new FlexTable();
+		lvDetailsTable.getColumnFormatter().setStyleName(0, "definingLabel");
+		lvDetailsTable.setCellPadding(6);
+		verticalPanel.add(lvDetailsTable);
+		
+		Label lblId = new Label("ID:");
+		lvDetailsTable.setWidget(0, 0, lblId);
+		
+		lblIdContent = new Label("[654]");
+		lvDetailsTable.setWidget(0, 1, lblIdContent);
+
+		Label lblKompetenzbereiche = new Label("Kompetenzbereiche:");
+		lvDetailsTable.setWidget(1, 0, lblKompetenzbereiche);
+
+		htmlKompetenzbereicheContent = new HTML(
+				"[Kernkompetenzbereich Software Engineering (KKB_SE), <br>Kernkompetenzbereich Informationssysteme (KKB_IS)]",
+				true);
+		lvDetailsTable.setWidget(1, 1, htmlKompetenzbereicheContent);
+
+		Label lblModul = new Label("Modul:");
+		lvDetailsTable.setWidget(2, 0, lblModul);
+
+		htmlModulContent = new HTML(
+				"[Vorlesungsmodul XYZ<br>beinhaltet nur eine Lehrveranstaltung]",
+				true);
+		lvDetailsTable.setWidget(2, 1, htmlModulContent);
+
+		Label lblFrequenz = new Label("Frequenz:");
+		lvDetailsTable.setWidget(3, 0, lblFrequenz);
+
+		lblFrequenzContent = new Label(
+				"[jedes Jahr, Winter, gültig von [2008 Sommer] bis [2012 Winter]]");
+		lvDetailsTable.setWidget(3, 1, lblFrequenzContent);
+
+		Label lblLeistung = new Label("Leistung:");
+		lvDetailsTable.setWidget(4, 0, lblLeistung);
+
+		htmlLeistungContent = new HTML(
+				"[Studienleistung, benotet<br>Anmeldung nur im Prüfungsamt]",
+				true);
+		lvDetailsTable.setWidget(4, 1, htmlLeistungContent);
+
+		Label lblBemerkung = new Label("Bemerkung:");
+		lvDetailsTable.setWidget(5, 0, lblBemerkung);
+
+		lblBemerkungContent = new Label("[Bemerkung der Lehrveranstaltung]");
+		lvDetailsTable.setWidget(5, 1, lblBemerkungContent);
+
+		for (int row = 0; row < lvDetailsTable.getRowCount(); row++)
+			lvDetailsTable.getCellFormatter().setVerticalAlignment(row, 0,
+					HasVerticalAlignment.ALIGN_TOP);
+	}
+
+
+	private void buildSemesterangeboteGUI(VerticalPanel verticalPanel) {
+
+		semesterAngebotTable = new FlexTable();
+		semesterAngebotTable.setCellPadding(6);
+		verticalPanel.add(semesterAngebotTable);
+
+		String[] headings = { "Semester", "Prüfungsart", "Prüfer", "Dozent",
+				"Angebot" };
+
+		for (int i = 0; i < headings.length; i++)
+			semesterAngebotTable.setText(0, i, headings[i]);
+
+		semesterAngebotTable.getRowFormatter().setStyleName(0,
+				"detailsTableHeader");
+	}
+
+
+	private void fillDetailsData(Lehrveranstaltung lv) {
+
+		lblIdContent.setText(lv.getId() + "");
+		htmlKompetenzbereicheContent.setHTML(getKompetenzbereicheHtml(lv));
+		htmlModulContent.setHTML(getModulHtml(lv));
+		lblFrequenzContent.setText(getFrequenzInfo(lv));
+		htmlLeistungContent.setHTML(getLeistungHtml(lv));
+		lblBemerkungContent.setText(lv.getBemerkung());
+
+		fillSemesterangeboteData(lv);
+	}
+
+
+	private String getFrequenzInfo(Lehrveranstaltung lv) {
+
+		String frequenz = lv.getFrequenz();
+		if (!lv.getFrequenzSemester().isEmpty())
+			frequenz += ", " + lv.getFrequenzSemester();
+		frequenz += ", gültig von [" + lv.getGueltigVon() + "]";
+		frequenz += " bis [" + lv.getGueltigBis() + "]";
+		return frequenz;
+	}
+
+
+	private String getModulHtml(Lehrveranstaltung lv2) {
+
+		Modul modul = null;
+		for (PruefbareEinheit pe : lv.getPruefbareEinheiten())
+			for (Pruefung p : pe.getPruefungen())
+				modul = p.getModul();
+
+		if (modul == null)
+			return "";
+
+		String result = modul.getName();
+
+		if (!modul.getEnglishName().isEmpty())
+			result += " / " + modul.getEnglishName();
+
+		if (!modul.getBemerkung().isEmpty())
+			result += "<br>" + modul.getBemerkung();
+
+//		if (!modul.getWahlmerkmal().isEmpty())
+//			result += "<br>" + modul.getWahlmerkmal();
+
+		return result;
+	}
+
+
+	private String getLeistungHtml(Lehrveranstaltung lv) {
+
+		String leistung = "";
+
+		try {
+			if (lv.isBenotet())
+				leistung += "benotet";
+			else
+				leistung += "unbenotet";
+		} catch (NoPruefbareEinheitException e) {
+			leistung += "[keine Angabe zu benotet / unbenotet]";
+		}
+
+		if (!leistung.isEmpty())
+			leistung += ", ";
+
+		try {
+			leistung += lv.getLeistungspunkte() + " Leistungspunkte";
+		} catch (NoPruefbareEinheitException e) {
+			// ok :)
+		}
+
+		String pruefungsBemerkung = lv.getPruefungsBemerkungHtml();
+		if (!pruefungsBemerkung.isEmpty())
+			leistung += "<br>";
+		leistung += pruefungsBemerkung;
+
+		return leistung;
+	}
+
+
+	private void fillSemesterangeboteData(Lehrveranstaltung lv) {
+
+		ArrayList<Semesterangebot> angebote = new ArrayList<Semesterangebot>(
+				lv.getSemesterangebote());
+
+		Collections.sort(angebote, new Comparator<Semesterangebot>() {
+
+			@Override
+			public int compare(Semesterangebot o1, Semesterangebot o2) {
+
+				Semester semester1 = o1.getSemester();
+				Semester semester2 = o2.getSemester();
+				if (semester1.getJahr() == semester2.getJahr())
+					return semester1.getJahreszeit().compareTo(
+							semester2.getJahreszeit());
+				else
+					return semester1.getJahr() - semester2.getJahr();
+			}
+		});
+
+		int rowIndex = 0;
+		for (Semesterangebot angebot : angebote) {
+			rowIndex++;
+			Semester semester = angebot.getSemester();
+
+			semesterAngebotTable.setText(rowIndex, 0, semester.toString());
+
+			semesterAngebotTable
+					.setText(rowIndex, 1, angebot.getPruefungsArt());
+
+			semesterAngebotTable.setText(rowIndex, 2, angebot.getPruefer());
+
+			semesterAngebotTable.setText(rowIndex, 3, angebot.getDozenten());
+
+			semesterAngebotTable.setWidget(rowIndex, 4,
+					new SemesterAngebotCell(angebot));
+
+			for (int col = 0; col < 5; col++)
+				semesterAngebotTable.getCellFormatter().setVerticalAlignment(
+						rowIndex, col, HasVerticalAlignment.ALIGN_TOP);
+		}
+	}
+
+
+	private String getKompetenzbereicheHtml(Lehrveranstaltung lv) {
+
+		String result = "";
+
+		for (Kompetenzbereich kb : lv.getKompetenzbereiche()) {
+			if (!result.isEmpty())
+				result += ",<br>";
+			result += kb.getName();
+		}
+
+		return result;
+	}
+
+
+	private void setHeaderText(Lehrveranstaltung lv) {
+
+		String headerText;
+		if (lv.getTitel().equals(lv.getEnglishTitle()))
+			headerText = lv.getTitel();
+		else
+			headerText = lv.getTitel() + " / " + lv.getEnglishTitle();
+		disclosurePanel.getHeaderTextAccessor().setText(headerText);
+	}
+
+
+	public Lehrveranstaltung getLV() {
+
+		return lv;
+	}
+
+}

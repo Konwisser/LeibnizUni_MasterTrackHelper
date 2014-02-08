@@ -1,0 +1,85 @@
+package de.unihannover.dbs.mth.client.view;
+
+import java.beans.Beans;
+import java.util.List;
+import java.util.Set;
+
+import com.google.gwt.dom.client.Style.Position;
+import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.DockPanel;
+import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.RootPanel;
+import com.google.gwt.user.client.ui.VerticalPanel;
+import com.google.gwt.user.client.ui.ScrollPanel;
+import com.google.gwt.user.client.ui.HasHorizontalAlignment;
+
+import de.unihannover.dbs.mth.client.model.Lehrveranstaltung;
+
+class MainFrame extends Composite {
+
+	private Label lblStatusContent;
+	private InterestSelectionTable interestSelectionTable;
+	private VerticalPanel belowStatusPanel;
+
+	MainFrame() {
+
+		VerticalPanel verticalPanel = new VerticalPanel();
+		initWidget(verticalPanel);
+		// verticalPanel.setSize("774px", "92px");
+		verticalPanel.setWidth("100%");
+		if (Beans.isDesignTime())
+			setStatusText("[empfange aktuelle Daten vom Modulkatalog]");
+
+		HorizontalPanel statusPanel = new HorizontalPanel();
+		statusPanel.setSpacing(5);
+		verticalPanel.add(statusPanel);
+
+		Label lblStatus = new Label("Status:");
+		lblStatus.setStyleName("definingLabel");
+		statusPanel.add(lblStatus);
+
+		lblStatusContent = new Label();
+		statusPanel.add(lblStatusContent);
+
+		belowStatusPanel = new VerticalPanel();
+		verticalPanel.add(belowStatusPanel);
+		belowStatusPanel.setWidth("100%");
+		if (!Beans.isDesignTime())
+			belowStatusPanel.setVisible(false);
+
+		Label lblPageTitle = new Label("Master Track Helper");
+		belowStatusPanel.add(lblPageTitle);
+		lblPageTitle.setStyleName("h1");
+		lblPageTitle.setWordWrap(false);
+		lblPageTitle
+				.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
+		lblPageTitle.setWidth("100%");
+
+		ScrollPanel scrollPanel = new ScrollPanel();
+		scrollPanel.setStyleName((String) null);
+		belowStatusPanel.add(scrollPanel);
+		scrollPanel.setHeight("645px");
+
+		interestSelectionTable = new InterestSelectionTable();
+		interestSelectionTable.setSize("100%", "100%");
+		scrollPanel.setWidget(interestSelectionTable);
+	}
+
+	public void setStatusText(String text) {
+		lblStatusContent.setText(text);
+	}
+
+	public void fillTableData(List<Lehrveranstaltung> lehrveranstaltungen) {
+		interestSelectionTable.clearContent();
+		interestSelectionTable.fillTable(lehrveranstaltungen);
+	}
+
+	public void setBelowStatusVisible(boolean visible) {
+		belowStatusPanel.setVisible(visible);		
+	}
+
+	public Set<Lehrveranstaltung> getLVofInterest() {
+		return interestSelectionTable.getSelectedLV();
+	}
+}

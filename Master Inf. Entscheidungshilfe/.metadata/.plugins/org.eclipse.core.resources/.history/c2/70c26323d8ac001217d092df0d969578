@@ -1,0 +1,156 @@
+package de.unihannover.dbs.mth.client.view;
+
+
+import java.beans.Beans;
+import java.util.List;
+import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.VerticalPanel;
+import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.HasHorizontalAlignment;
+import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.dom.client.ClickEvent;
+
+import de.unihannover.dbs.mth.client.model.Lehrveranstaltung;
+import de.unihannover.dbs.mth.client.view.LvSelectionTable.InterestSelTablePresenter;
+import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.HasVerticalAlignment;
+import com.google.gwt.user.client.ui.ListBox;
+import com.google.gwt.event.dom.client.ChangeHandler;
+import com.google.gwt.event.dom.client.ChangeEvent;
+import com.google.gwt.user.client.ui.FlexTable;
+
+
+public class LvSelectionView extends Composite {
+
+	private LvSelectionTable lvSelectionTable;
+	private Label lblShownLvCount;
+	private ListBox cmbFilterSelection;
+	private Button btnCalcRecommendationsTop;
+	private Button btnCalcRecommendationsBottom;
+	private Button btnFilter;
+
+	public interface InterestSelPresenter extends InterestSelTablePresenter {
+
+		public void btnCalcRecommendationClicked();
+
+
+		public void btnFilterClicked();
+
+
+		public void cmbSelectionFilterChanged(String newValue);
+
+
+		public List<String> getUserSelectionFilterOptions();
+	}
+
+
+	public LvSelectionView(final InterestSelPresenter presenter) {
+
+		buildUI(presenter);
+
+		addHandlers(presenter);
+
+		fillContent(presenter);
+	}
+
+
+	public void fillContent(final InterestSelPresenter presenter) {
+
+		if (!Beans.isDesignTime())
+			lblShownLvCount.setText("");
+
+		for (String selOption : presenter.getUserSelectionFilterOptions())
+			cmbFilterSelection.addItem(selOption);
+	}
+
+
+	public void buildUI(final InterestSelPresenter presenter) {
+
+		VerticalPanel verticalPanel = new VerticalPanel();
+		initWidget(verticalPanel);
+		verticalPanel.setWidth("100%");
+
+		FlexTable flexTable = new FlexTable();
+		verticalPanel.add(flexTable);
+		verticalPanel.setCellWidth(flexTable, "100%");
+
+		HorizontalPanel horizontalPanel_1 = new HorizontalPanel();
+		flexTable.setWidget(0, 0, horizontalPanel_1);
+
+		cmbFilterSelection = new ListBox();
+		horizontalPanel_1.add(cmbFilterSelection);
+		horizontalPanel_1.setCellVerticalAlignment(cmbFilterSelection,
+				HasVerticalAlignment.ALIGN_MIDDLE);
+
+		btnFilter = new Button("Filter");
+		horizontalPanel_1.add(btnFilter);
+
+		lblShownLvCount = new Label("[136 Lehrveranstaltungen]");
+		horizontalPanel_1.add(lblShownLvCount);
+		horizontalPanel_1.setCellVerticalAlignment(lblShownLvCount,
+				HasVerticalAlignment.ALIGN_MIDDLE);
+
+		btnCalcRecommendationsTop = new Button("Berechne Empfehlungen");
+		flexTable.setWidget(0, 1, btnCalcRecommendationsTop);
+		verticalPanel.setCellHorizontalAlignment(btnCalcRecommendationsTop,
+				HasHorizontalAlignment.ALIGN_RIGHT);
+		flexTable.getCellFormatter().setHorizontalAlignment(0, 1,
+				HasHorizontalAlignment.ALIGN_RIGHT);
+		flexTable.getCellFormatter().setHorizontalAlignment(0, 0,
+				HasHorizontalAlignment.ALIGN_LEFT);
+		flexTable.getRowFormatter().setVerticalAlign(0,
+				HasVerticalAlignment.ALIGN_MIDDLE);
+
+		lvSelectionTable = new LvSelectionTable(presenter);
+		verticalPanel.add(lvSelectionTable);
+
+		btnCalcRecommendationsBottom = new Button("Berechne Empfehlungen");
+		verticalPanel.add(btnCalcRecommendationsBottom);
+		verticalPanel.setCellHorizontalAlignment(btnCalcRecommendationsBottom,
+				HasHorizontalAlignment.ALIGN_RIGHT);
+	}
+
+
+	public void addHandlers(final InterestSelPresenter presenter) {
+
+		cmbFilterSelection.addChangeHandler(new ChangeHandler() {
+
+			public void onChange(ChangeEvent event) {
+
+				ListBox listBox = (ListBox) event.getSource();
+				int selIndex = listBox.getSelectedIndex();
+				String selItem = listBox.getItemText(selIndex);
+
+				presenter.cmbSelectionFilterChanged(selItem);
+			}
+		});
+
+		
+		ClickHandler btnCalcRecClickHandler = new ClickHandler() {
+
+			public void onClick(ClickEvent event) {
+
+				presenter.btnCalcRecommendationClicked();
+			}
+		};		
+		btnCalcRecommendationsTop.addClickHandler(btnCalcRecClickHandler);
+		btnCalcRecommendationsBottom.addClickHandler(btnCalcRecClickHandler);
+
+		btnFilter.addClickHandler(new ClickHandler() {
+
+			public void onClick(ClickEvent event) {
+
+				presenter.btnFilterClicked();
+			}
+		});		
+	}
+
+
+	public void fillTable(List<Lehrveranstaltung> lvs) {
+
+		lblShownLvCount.setText(lvs.size() + " angezeigte Lehrveranstaltungen");
+
+		lvSelectionTable.fillTable(lvs);
+	}
+}

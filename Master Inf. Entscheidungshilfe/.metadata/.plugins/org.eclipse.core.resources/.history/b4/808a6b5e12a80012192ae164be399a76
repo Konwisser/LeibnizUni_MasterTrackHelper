@@ -1,0 +1,36 @@
+Version beta2.1:
+----------------
+
+wichtigsten zwei Spalten der Empfehlungs-Tabelle (KKB Wahl und Anmerkung) sind jetzt die ersten beiden (ganz links), sodass sie auch bei schmalen Browser-Fenstern in jedem Fall angezeigt werden
+
+die Spaltenüberschriften der Empfehlungen-Tabelle sind kürzer und lassen sich umbrechen, sodass die Tabelle viel schmaler werden kann und trotzdem alle Spalten anzeigt
+
+alle Spaltenüberschriften der Empfehlungen-Tabelle, die Kürzel beinhalten, sowie alle Tabellen-Einträge der Form "4 (+3)" haben jetzt ausführlich erläuternde Tooltip-Boxen bei einem Mouse-Over
+
+
+
+Version beta2.0:
+----------------
+
+der Javascript Code auf der Client Seite enthält keinerlei sensible Daten (Benutzernamen, Passwörter)
+
+aktuelle Daten der Lehrveranstaltungen, Semesterangebote und Prüfungen werden vom Modulkatalog abgerufen und übersichtlich mit aufklappbaren Details dargestellt
+
+die Lehrveranstaltungen sind nach Kompetenzbereichen sortiert, sodass man beliebige Lehrveranstaltungen wählen oder schnell zu LVen aus bestimmten Kompetenzbereichen scrollen kann
+
+nach dem Markieren der Lehrveranstalungen von Interesse und Drücken des "Berechne Empfehlungen" Knopfes werden alle Zweier- und Dreier-KKB-Kombinationen durchgerechnet und angezeigt
+
+die KKB-Kombinationen sind danach sortiert wie empfehlenswert sie sind (bzgl. der vorher getroffenen Wahl von Lehrveranstaltungen) - in absteigender Reihenfolge
+
+Folgendes wird beim Ranking berücksichtigt:
+Lehrveranstaltungen, die in zwei KKBe fallen
+min. 2 und höchstens 3 Wahlpflicht-KKBe
+min. 11 LP pro gewählten Wahlpflicht-KKB
+KKB "Theoretische Informatik" mit min. 8 LP ist Pflicht
+Summe der LP aus KKBen, Informatik-Grundlagen und Betriebspraktikum muss min. 72 LP betragen, wobei min. 18 und höchstens 31 LP aus Studienleistungen stammen müssen
+
+bei jeder KKB-Kombination in der Empfehlungs-Übersicht kann man ggf. Bemerkungen ausklappen, in denen jede nicht erfüllte Anforderung im Detail beschrieben ist
+
+es kann jederzeit zurück zur LV-Auswahl gewechselt und die Auswahl geändert werden
+
+Back-Button Funktionalität (beim Drücken auf den Zurück- oder Vor-Knopf des Browsers verhält sich die Webapp erwartungsgemäß und springt nicht etwa in den Anfangszustand)

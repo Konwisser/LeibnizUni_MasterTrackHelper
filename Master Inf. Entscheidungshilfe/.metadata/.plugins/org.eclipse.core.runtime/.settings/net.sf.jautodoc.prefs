@@ -1,0 +1,6 @@
+create_dummy_doc=false
+eclipse.preferences.version=1
+get_set_from_field=true
+header_text=
+replacements=<?xml version\="1.0" standalone\="yes"?>\n\n<replacements>\n<replacement key\="get" scope\="1" mode\="0">Liefert</replacement>\n<replacement key\="set" scope\="1" mode\="0">Definiert</replacement>\n<replacement key\="add" scope\="1" mode\="0">F&\#252;gt ??? hinzu</replacement>\n<replacement key\="edit" scope\="1" mode\="0">Bearbeitet</replacement>\n<replacement key\="remove" scope\="1" mode\="0">Entfernt</replacement>\n<replacement key\="init" scope\="1" mode\="0">Initiiert</replacement>\n<replacement key\="parse" scope\="1" mode\="0">Parst</replacement>\n<replacement key\="create" scope\="1" mode\="0">Erstellt</replacement>\n<replacement key\="build" scope\="1" mode\="0">Baut ??? auf</replacement>\n<replacement key\="is" scope\="1" mode\="0">Gibt an, ob</replacement>\n<replacement key\="print" scope\="1" mode\="0">Gibt ??? auf der Konsole aus.</replacement>\n<replacement key\="has" scope\="1" mode\="0">Pr&\#252;ft ob</replacement>\n<replacement key\="calc" scope\="1" mode\="0">Berechnet</replacement>\n</replacements>\n\n
+visibility_private=false

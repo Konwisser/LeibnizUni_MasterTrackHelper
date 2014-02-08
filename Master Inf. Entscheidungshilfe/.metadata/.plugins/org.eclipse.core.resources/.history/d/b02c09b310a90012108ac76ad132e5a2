@@ -1,0 +1,94 @@
+package de.unihannover.dbs.mth.client.presenter;
+
+import java.util.HashMap;
+import java.util.HashSet;
+
+import de.unihannover.dbs.mth.client.model.Kompetenzbereich;
+import de.unihannover.dbs.mth.client.model.Lehrveranstaltung;
+import de.unihannover.dbs.mth.client.presenter.HistoryTools.MultiLvArg;
+import de.unihannover.dbs.mth.client.presenter.HistoryTools.Page;
+
+//public static enum SelectionOpt {
+//	UNKNOWN("undefiniert"), INTEREST("Interesse"), NO_INTEREST(
+//			"Kein Interesse"), INTEREST_NOT_OFFERED(
+//			"Interesse - wenn wieder angeboten"), DONE_IN_BACHELOR(
+//			"bestanden");
+//
+//	public final String humanName;
+//
+//
+//	private SelectionOpt(String humanName) {
+//
+//		this.humanName = humanName;
+//	}
+//}
+
+
+public class PageAndArgs {
+
+	Page page;
+
+	HashMap<String, HashSet<Lehrveranstaltung>> multiLvArgs;
+
+
+	public PageAndArgs(Page page) {
+
+		this.page = page;
+
+		multiLvArgs = new HashMap<String, HashSet<Lehrveranstaltung>>();
+		for (String argName : HistoryTools.multiLvArgNames)
+			multiLvArgs.put(argName, new HashSet<Lehrveranstaltung>());
+	}
+
+
+	public Page getPage() {
+
+		return page;
+	}
+
+
+	public void setPage(Page page) {
+
+		this.page = page;
+	}
+
+
+	public void setMultiLvArg(MultiLvArg arg,
+			HashSet<Lehrveranstaltung> value) {
+
+		multiLvArgs.put(arg.name(), value);
+	}
+
+
+	public void setMultiLvArg(Kompetenzbereich kb,
+			HashSet<Lehrveranstaltung> value) {
+
+		multiLvArgs.put(HistoryTools.kbToArg(kb), value);
+	}
+
+
+	public HashSet<Lehrveranstaltung> getLvs(MultiLvArg arg) {
+
+		return multiLvArgs.get(arg.name());
+	}
+
+
+	public HashSet<Lehrveranstaltung> getLvsDone(Kompetenzbereich kb) {
+
+		return multiLvArgs.get(HistoryTools.kbToArg(kb));
+	}
+
+
+	public PageAndArgs copy() {
+
+		PageAndArgs copy = new PageAndArgs(page);
+
+		for (String argName : multiLvArgs.keySet()) {
+			HashSet<Lehrveranstaltung> lvsCopy = new HashSet<Lehrveranstaltung>(
+					multiLvArgs.get(argName));
+			copy.multiLvArgs.put(argName, lvsCopy);
+		}
+
+		return copy;
+	}
+}

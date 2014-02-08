@@ -1,0 +1,6 @@
+package de.unihannover.dbs.mth.client.model;
+
+
+public class Modul {
+
+}

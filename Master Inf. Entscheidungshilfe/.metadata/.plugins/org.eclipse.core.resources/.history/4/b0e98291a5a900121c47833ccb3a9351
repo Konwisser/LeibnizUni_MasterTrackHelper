@@ -1,0 +1,126 @@
+package de.unihannover.dbs.mth.client.view;
+
+
+import java.beans.Beans;
+import java.util.List;
+import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.VerticalPanel;
+import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.HasHorizontalAlignment;
+import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.dom.client.ClickEvent;
+
+import de.unihannover.dbs.mth.client.model.Lehrveranstaltung;
+import de.unihannover.dbs.mth.client.view.LvSelectionTable.InterestSelTablePresenter;
+import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.HasVerticalAlignment;
+import com.google.gwt.user.client.ui.ListBox;
+import com.google.gwt.event.dom.client.ChangeHandler;
+import com.google.gwt.event.dom.client.ChangeEvent;
+
+
+public class LvSelectionView extends Composite {
+
+	private LvSelectionTable lvSelectionTable;
+	private Label lblShownLvCount;
+	private ListBox cmbFilterSelection;
+
+	public interface InterestSelPresenter extends InterestSelTablePresenter {
+
+		public void btnCalcRecommendationClicked();
+
+
+		public void btnFilterClicked();
+
+
+		public void cmbSelectionFilterChanged(String newValue);
+
+
+		public List<String> getUserSelectionFilterOptions();
+	}
+
+
+	public LvSelectionView(final InterestSelPresenter presenter) {
+
+		VerticalPanel verticalPanel = new VerticalPanel();
+		initWidget(verticalPanel);
+
+		HorizontalPanel horizontalPanel = new HorizontalPanel();
+		horizontalPanel.setBorderWidth(0);
+		verticalPanel.add(horizontalPanel);
+		verticalPanel.setCellHorizontalAlignment(horizontalPanel,
+				HasHorizontalAlignment.ALIGN_RIGHT);
+
+		Button btnFilter = new Button("Filter");
+		btnFilter.addClickHandler(new ClickHandler() {
+
+			public void onClick(ClickEvent event) {
+
+				presenter.btnFilterClicked();
+			}
+		});
+
+		lblShownLvCount = new Label("[136 Lehrveranstaltungen]");
+		if (!Beans.isDesignTime())
+			lblShownLvCount.setText("");
+		horizontalPanel.add(lblShownLvCount);
+		horizontalPanel.setCellVerticalAlignment(lblShownLvCount,
+				HasVerticalAlignment.ALIGN_MIDDLE);
+
+		cmbFilterSelection = new ListBox();
+		for (String selOption : presenter.getUserSelectionFilterOptions())
+			cmbFilterSelection.addItem(selOption);
+		cmbFilterSelection.addChangeHandler(new ChangeHandler() {
+
+			public void onChange(ChangeEvent event) {
+
+				ListBox listBox = (ListBox) event.getSource();
+				int selIndex = listBox.getSelectedIndex();
+				String selItem = listBox.getItemText(selIndex);
+
+				presenter.cmbSelectionFilterChanged(selItem);
+			}
+		});
+		horizontalPanel.add(cmbFilterSelection);
+
+		horizontalPanel.setCellVerticalAlignment(cmbFilterSelection,
+				HasVerticalAlignment.ALIGN_MIDDLE);
+		horizontalPanel.add(btnFilter);
+
+		Button btnCalcRecommendations1 = new Button("Berechne Empfehlungen");
+		horizontalPanel.add(btnCalcRecommendations1);
+		horizontalPanel.setCellHorizontalAlignment(btnCalcRecommendations1,
+				HasHorizontalAlignment.ALIGN_RIGHT);
+		btnCalcRecommendations1.addClickHandler(new ClickHandler() {
+
+			public void onClick(ClickEvent event) {
+
+				presenter.btnCalcRecommendationClicked();
+			}
+		});
+		verticalPanel.setCellHorizontalAlignment(btnCalcRecommendations1,
+				HasHorizontalAlignment.ALIGN_RIGHT);
+
+		lvSelectionTable = new LvSelectionTable(presenter);
+		verticalPanel.add(lvSelectionTable);
+
+		Button btnBerechneEmpfehlungen = new Button("Berechne Empfehlungen");
+		btnBerechneEmpfehlungen.addClickHandler(new ClickHandler() {
+
+			public void onClick(ClickEvent event) {
+
+				presenter.btnCalcRecommendationClicked();
+			}
+		});
+		verticalPanel.add(btnBerechneEmpfehlungen);
+		verticalPanel.setCellHorizontalAlignment(btnBerechneEmpfehlungen,
+				HasHorizontalAlignment.ALIGN_RIGHT);
+	}
+
+
+	public void fillTable(List<Lehrveranstaltung> lvs) {
+
+		lvSelectionTable.fillTable(lvs);
+	}
+}

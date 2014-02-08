@@ -1,0 +1,220 @@
+package de.unihannover.dbs.mth.client.model;
+
+import java.util.HashSet;
+import java.util.Set;
+
+import de.unihannover.dbs.mth.client.model.ModkatFactory.Leistung;
+
+public class Lehrveranstaltung {
+	
+	/**
+	 * ID der Lehrveranstaltung "Masterarbeit"
+	 */
+	public static final int LV_MASTER_THESIS_ID = 2853;
+	
+	public static class NoPruefungException extends Exception {
+		private static final long serialVersionUID = 1L;
+	}
+
+	public static class NoPruefbareEinheitException extends Exception {
+		private static final long serialVersionUID = 1L;
+	}
+
+	/**
+	 * ID der Lehrveranstaltung
+	 */
+	private final long id;
+
+	/**
+	 * Titel der Lehrveranstaltung
+	 */
+	private String titel;
+
+	private String englishTitle;
+
+	/**
+	 * Frequenz der Lehrveranstaltung (z.B. "jedes Jahr")
+	 */
+	private String frequenz;
+
+	/**
+	 * Frequenz auf Semester bezogen
+	 */
+	private String frequenzSemester;
+
+	private String bemerkung;
+
+	/**
+	 * Aufzählung von Namen der Ansprechpartner
+	 */
+	private String Ansprechpartner;
+
+	/**
+	 * Prüfbare Einheiten zu dieser Lehrveranstaltung
+	 */
+	private Set<PruefbareEinheit> pruefbareEinheiten;
+
+	/**
+	 * Semesterangebote zu dieser Lehrveranstaltung
+	 */
+	private Set<Semesterangebot> semesterangebote;
+
+	private Semester gueltigVon;
+
+	private Semester gueltigBis;
+
+	Lehrveranstaltung(long id) {
+		this.id = id;
+		this.pruefbareEinheiten = new HashSet<PruefbareEinheit>();
+		this.semesterangebote = new HashSet<Semesterangebot>();
+	}
+
+	public String getTitel() {
+		return titel;
+	}
+
+	public void setTitel(String titel) {
+		this.titel = titel;
+	}
+
+	public String getEnglishTitle() {
+		return englishTitle;
+	}
+
+	public void setEnglishTitle(String englishTitle) {
+		this.englishTitle = englishTitle;
+	}
+
+	public String getFrequenz() {
+		return frequenz;
+	}
+
+	public void setFrequenz(String frequenz) {
+		this.frequenz = frequenz;
+	}
+
+	public String getFrequenzSemester() {
+		return frequenzSemester;
+	}
+
+	public void setFrequenzSemester(String frequenzSemester) {
+		this.frequenzSemester = frequenzSemester;
+	}
+
+	public String getAnsprechpartner() {
+		return Ansprechpartner;
+	}
+
+	public void setAnsprechpartner(String ansprechpartner) {
+		Ansprechpartner = ansprechpartner;
+	}
+
+	public long getId() {
+		return id;
+	}
+
+	public Set<PruefbareEinheit> getPruefbareEinheiten() {
+		return pruefbareEinheiten;
+	}
+
+	public Set<Semesterangebot> getSemesterangebote() {
+		return semesterangebote;
+	}
+
+	public String getBemerkung() {
+		return bemerkung;
+	}
+
+	public void setBemerkung(String bemerkung) {
+		this.bemerkung = bemerkung;
+	}
+
+	/**
+	 * In der Annahme, dass pro Lehrveranstaltung höchstens eine prüfbare
+	 * Einheit existiert, werden die Leistungspunkte dieser prüfbaren Einheit
+	 * zurückgegeben.
+	 * 
+	 * @return Leistungspunkte dieser Lehrveranstaltung
+	 * @throws NoPruefbareEinheitException
+	 *             Falls keine prüfbaren Einheit zu dieser Veranstaltung
+	 *             existiert
+	 */
+	public int getLeistungspunkte() throws NoPruefbareEinheitException {
+		for (PruefbareEinheit pe : pruefbareEinheiten)
+			return pe.getLeistungsPunkte();
+
+		throw new NoPruefbareEinheitException();
+	}
+
+	/**
+	 * In der Annahme, dass pro Lehrveranstaltung höchstens eine prüfbare
+	 * Einheit und pro prüfbare Einheit höchstens eine Prüfung existiert, wird
+	 * die zu erbringende Leistung dieser Prüfung zurückgegeben
+	 * 
+	 * @return für diese Lehrveranstaltung zu erbringende Leistung
+	 * @throws NoPruefungException
+	 *             Falls keine Prüfung zu dieser Veranstaltung existiert
+	 */
+	public Leistung getLeistung() throws NoPruefungException {
+		for (PruefbareEinheit pe : pruefbareEinheiten)
+			for (Pruefung p : pe.getPruefungen())
+				return p.getLeistung();
+
+		throw new NoPruefungException();
+	}
+
+	public Semester getGueltigVon() {
+		return gueltigVon;
+	}
+
+	public void setGueltigVon(Semester gueltigVon) {
+		this.gueltigVon = gueltigVon;
+	}
+
+	public Semester getGueltigBis() {
+		return gueltigBis;
+	}
+
+	public void setGueltigBis(Semester gueltigBis) {
+		this.gueltigBis = gueltigBis;
+	}
+
+	/**
+	 * In der Annahme, dass pro Lehrveranstaltung höchstens eine prüfbare
+	 * Einheit existiert, wird <code>true</code> zurückgegeben, falls diese
+	 * prüfbare Einheit benotet ist, sonst <code>false</code>.
+	 * 
+	 * @return für diese Lehrveranstaltung zu erbringende Leistung
+	 * @throws NoPruefbareEinheitException
+	 *             Falls keine prüfbaren Einheit zu dieser Veranstaltung
+	 *             existiert
+	 */
+	public boolean isBenotet() throws NoPruefbareEinheitException {
+		for (PruefbareEinheit pe : pruefbareEinheiten)
+			return pe.isBenotet();
+		throw new NoPruefbareEinheitException();
+	}
+	
+	public String getPruefungsBemerkungHtml() {
+		String bemerkung = "";
+		for (PruefbareEinheit pe : pruefbareEinheiten) {
+			if (!bemerkung.isEmpty())
+				bemerkung += "<br>";
+			bemerkung += pe.getBemerkung();
+			for (Pruefung p : pe.getPruefungen()) {
+				if (!bemerkung.isEmpty())
+					bemerkung += "<br>";
+				bemerkung += p.getBemerkung();
+			}
+		}
+		return bemerkung;
+	}
+	
+	public Set<Kompetenzbereich> getKompetenzbereiche() {
+		HashSet<Kompetenzbereich> result = new HashSet<Kompetenzbereich>();
+		for (PruefbareEinheit pe : pruefbareEinheiten)
+			for (Modul modul : pe.getPruefungen().getModul())
+				result.addAll(modul.getKompetenzbereiche());
+		return result;
+	}
+}

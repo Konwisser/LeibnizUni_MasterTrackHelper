@@ -1,0 +1,338 @@
+package de.unihannover.dbs.mth.client.view;
+
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.RepeatingCommand;
+import com.google.gwt.event.dom.client.ChangeEvent;
+import com.google.gwt.event.dom.client.ChangeHandler;
+import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.FlexTable;
+import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.HTMLTable;
+import com.google.gwt.user.client.ui.HasAlignment;
+import com.google.gwt.user.client.ui.ListBox;
+import com.google.gwt.user.client.ui.Widget;
+
+import de.unihannover.dbs.mth.client.model.Kompetenzbereich;
+import de.unihannover.dbs.mth.client.model.Lehrveranstaltung;
+import de.unihannover.dbs.mth.client.model.ModkatFactory;
+import de.unihannover.dbs.mth.client.model.Lehrveranstaltung.NoPruefbareEinheitException;
+import de.unihannover.dbs.mth.client.view.InterestSelectionView.SelectionOpt;
+
+import com.google.gwt.user.client.ui.HasHorizontalAlignment;
+
+
+public class InterestSelectionTable extends Composite {
+
+	public static interface InterestSelTablePresenter {
+
+		public void finishedTableBuilding();
+	}
+
+	private class LvComboBoxChangeHandler implements ChangeHandler {
+
+		private Lehrveranstaltung lv;
+
+
+		public LvComboBoxChangeHandler(Lehrveranstaltung lv) {
+
+			this.lv = lv;
+		}
+
+
+		@Override
+		public void onChange(ChangeEvent event) {
+
+			ListBox listBox = (ListBox) event.getSource();
+			int selIndex = listBox.getSelectedIndex();
+			String selText = listBox.getItemText(selIndex);
+
+			for (String key : selToLvs.keySet())
+				if (key.equals(selText))
+					selToLvs.get(key).add(lv);
+				else
+					selToLvs.get(key).remove(lv);
+		}
+	}
+
+	private FlexTable table;
+
+	private HashMap<Lehrveranstaltung, ListBox> lvToComboBox;
+
+	private HashMap<String, HashSet<Lehrveranstaltung>> selToLvs;
+
+	private InterestSelTablePresenter presenter;
+
+
+	public InterestSelectionTable(InterestSelTablePresenter presenter) {
+
+		this.presenter = presenter;
+
+		lvToComboBox = new HashMap<Lehrveranstaltung, ListBox>();
+
+		initSelections();
+
+		buildTable();
+
+		initWidget(table);
+	}
+
+
+	private void initSelections() {
+
+		selToLvs = new HashMap<String, HashSet<Lehrveranstaltung>>();
+
+		for (SelectionOpt s : SelectionOpt.values())
+			selToLvs.put(s.humanName, new HashSet<Lehrveranstaltung>());
+
+		for (Kompetenzbereich kb : ModkatFactory.get().getAll(
+				Kompetenzbereich.class))
+			selToLvs.put(kbToSelectionText(kb),
+					new HashSet<Lehrveranstaltung>());
+	}
+
+
+	public void fillTable(final List<Lehrveranstaltung> lehrveranstaltungen) {
+
+		clearContent();
+
+		RepeatingCommand buildRows = new RepeatingCommand() {
+
+			private int index = 0;
+
+			private HTMLTable.RowFormatter rf = table.getRowFormatter();
+
+			private String statusBeforeRowBuilding = View.get().getStatusText();
+
+
+			@Override
+			public boolean execute() {
+
+				if (index == lehrveranstaltungen.size()) {
+					presenter.finishedTableBuilding();
+					return false;
+				}
+
+				View.get().setStatusText(
+						statusBeforeRowBuilding + " (" + index + " / "
+								+ lehrveranstaltungen.size() + ")");
+
+				Lehrveranstaltung lv = lehrveranstaltungen.get(index);
+
+				ArrayList<Widget> rowContent = new ArrayList<Widget>(4);
+
+				rowContent.add(createComboBox(lv));
+				rowContent.add(getKb(lv));
+				rowContent.add(getLp(lv));
+				rowContent.add(new LehrveranstaltungCell(lv));
+
+				int rowIndex = index + 1;
+
+				for (int col = 0; col < rowContent.size(); col++)
+					table.setWidget(rowIndex, col, rowContent.get(col));
+
+				table.getCellFormatter().setHorizontalAlignment(rowIndex, 0,
+						HasHorizontalAlignment.ALIGN_CENTER);
+
+				table.getCellFormatter().setHorizontalAlignment(rowIndex, 2,
+						HasHorizontalAlignment.ALIGN_RIGHT);
+
+				for (int col = 0; col < rowContent.size(); col++)
+					table.getCellFormatter().setVerticalAlignment(rowIndex,
+							col, HasAlignment.ALIGN_TOP);
+
+				if ((rowIndex % 2) != 0)
+					rf.addStyleName(rowIndex, "FlexTable-OddRow");
+				else
+					rf.addStyleName(rowIndex, "FlexTable-EvenRow");
+
+				index++;
+				return true;
+			}
+
+
+			private Widget getLp(Lehrveranstaltung lv) {
+
+				String lp = null;
+				try {
+					lp = lv.getLeistungspunkte() + "";
+				} catch (NoPruefbareEinheitException e) {
+					lp = "";
+				}
+
+				return new HTML(lp);
+			}
+
+
+			private HTML getKb(Lehrveranstaltung lv) {
+
+				String result = "";
+
+				for (Kompetenzbereich kb : lv.getKompetenzbereiche()) {
+					if (!result.isEmpty())
+						result += "<br>";
+					result += kb.getKuerzel();
+				}
+
+				HTML html = new HTML(result, true);
+
+				return html;
+			}
+
+
+			private ListBox createComboBox(Lehrveranstaltung lv) {
+
+				ListBox cmbBox = new ListBox();
+				cmbBox.setVisibleItemCount(1);
+
+				for (SelectionOpt s : SelectionOpt.values())
+					cmbBox.addItem(s.humanName);
+
+				Set<Kompetenzbereich> kbs = lv.getKompetenzbereiche();
+				if (kbs.size() > 1)
+					for (Kompetenzbereich kb : kbs)
+						cmbBox.addItem(kbToSelectionText(kb));
+
+				if (lv.getId() == Lehrveranstaltung.LV_MASTER_THESIS_ID)
+					cmbBox.setEnabled(false);
+				else
+					cmbBox.addChangeHandler(new LvComboBoxChangeHandler(lv));
+
+				for (String selText : selToLvs.keySet())
+					if (selToLvs.get(selText).contains(lv)) {
+						select(cmbBox, selText);
+						break;
+					}
+
+				lvToComboBox.put(lv, cmbBox);
+
+				cmbBox.setWidth("100%");
+
+				return cmbBox;
+			}
+		};
+
+		Scheduler.get().scheduleIncremental(buildRows);
+	}
+
+
+	private void select(ListBox cmbBox, String selText) {
+
+		if (cmbBox == null)
+			return;
+
+		for (int i = 0; i < cmbBox.getItemCount(); i++)
+			if (cmbBox.getItemText(i).equals(selText)) {
+				cmbBox.setSelectedIndex(i);
+				return;
+			}
+	}
+
+
+	private void buildTable() {
+
+		table = new FlexTable();
+		table.setStyleName("table");
+		table.setCellPadding(6);
+		table.setWidth("100%");
+		buildTableHeader();
+	}
+
+
+	private void buildTableHeader() {
+
+		String[] headers = new String[] { "Auswahl", "KB", "LP",
+				"Lehrveranstaltung" };
+		for (int col = 0; col < headers.length; col++)
+			table.setText(0, col, headers[col]);
+
+		table.getRowFormatter().addStyleName(0, "tableHeader");
+	}
+
+
+	public void clearContent() {
+
+		table.clear(true);
+		buildTableHeader();
+	}
+
+
+	public HashSet<Lehrveranstaltung> getSelected(SelectionOpt sel) {
+
+		return selToLvs.get(sel.humanName);
+	}
+
+
+	public void setSelected(SelectionOpt sel, HashSet<Lehrveranstaltung> lvs) {
+
+		setSelected(sel.humanName, lvs);
+	}
+
+
+	public void setSelected(Kompetenzbereich kkb, HashSet<Lehrveranstaltung> lvs) {
+
+		setSelected(kbToSelectionText(kkb), lvs);
+	}
+
+
+	private void setSelected(String selText, HashSet<Lehrveranstaltung> lvs) {
+
+		HashSet<Lehrveranstaltung> prevLvs = selToLvs.get(selText);
+
+		for (Lehrveranstaltung lv : prevLvs) {
+			if (lvs.contains(lv))
+				continue;
+
+			String curSel = getSelectedText(lv);
+			if (curSel.equals(SelectionOpt.UNKNOWN.humanName))
+				continue;
+
+			selToLvs.get(curSel).remove(lv);
+			selToLvs.get(SelectionOpt.UNKNOWN.humanName).add(lv);
+
+			select(lvToComboBox.get(lv), SelectionOpt.UNKNOWN.humanName);
+		}
+
+		for (Lehrveranstaltung lv : lvs) {
+			String curSel = getSelectedText(lv);
+
+			if (curSel.equals(selText))
+				continue;
+
+			selToLvs.get(curSel).remove(lv);
+			selToLvs.get(selText).add(lv);
+
+			select(lvToComboBox.get(lv), selText);
+		}
+	}
+
+
+	private String getSelectedText(Lehrveranstaltung lv) {
+
+		ListBox comboBox = lvToComboBox.get(lv);
+
+		if (comboBox == null)
+			return SelectionOpt.UNKNOWN.humanName;
+
+		int selIndex = comboBox.getSelectedIndex();
+		return comboBox.getItemText(selIndex);
+	}
+
+
+	private String kbToSelectionText(Kompetenzbereich kb) {
+
+		return "bestanden in " + kb.getKuerzel();
+	}
+
+
+	public HashSet<Lehrveranstaltung> getSelected(Kompetenzbereich kkb) {
+
+		return selToLvs.get(kbToSelectionText(kkb));
+	}
+}

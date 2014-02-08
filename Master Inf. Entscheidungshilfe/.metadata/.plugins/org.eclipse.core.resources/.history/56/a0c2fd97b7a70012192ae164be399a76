@@ -1,0 +1,249 @@
+package de.unihannover.dbs.mth.client.view;
+
+
+import java.beans.Beans;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.RepeatingCommand;
+import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.DisclosurePanel;
+import com.google.gwt.user.client.ui.FlexTable;
+import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.HTMLTable;
+import com.google.gwt.user.client.ui.HasHorizontalAlignment;
+import com.google.gwt.user.client.ui.HasVerticalAlignment;
+import com.google.gwt.user.client.ui.Widget;
+
+import de.unihannover.dbs.mth.client.logic.recommendation.KkbWahl;
+import de.unihannover.dbs.mth.client.logic.recommendation.RecommendationProvider;
+import de.unihannover.dbs.mth.client.model.Kompetenzbereich;
+import de.unihannover.dbs.mth.client.model.ModkatFactory;
+
+
+public class RecommendationTable extends Composite {
+
+	public static interface RecTablePresenter {
+
+		public void finishedTableBuilding();
+	}
+
+	private RecTablePresenter presenter;
+
+	private FlexTable table;
+
+	private Kompetenzbereich kkbThI;
+
+	private Kompetenzbereich kbIG;
+
+	private Kompetenzbereich kbBPr;
+
+
+	public RecommendationTable(RecommendationProvider recommendation,
+			RecTablePresenter presenter) {
+
+		this.presenter = presenter;
+
+		buildTable();
+
+		if (!Beans.isDesignTime())
+			fillTable(recommendation);
+
+		initWidget(table);
+	}
+
+
+	private void buildTable() {
+
+		table = new FlexTable();
+		table.setStyleName("table");
+		table.setCellPadding(6);
+		table.setWidth("100%");
+		buildTableHeader();
+	}
+
+
+	private void buildTableHeader() {
+
+		kkbThI = ModkatFactory.get().get(Kompetenzbereich.class,
+				Kompetenzbereich.KKB_ThI_ID);
+		kbIG = ModkatFactory.get().get(Kompetenzbereich.class,
+				Kompetenzbereich.KB_IG_ID);
+		kbBPr = ModkatFactory.get().get(Kompetenzbereich.class,
+				Kompetenzbereich.KB_BPr_ID);
+
+		ArrayList<Widget> headings = new ArrayList<Widget>();
+		headings.add(html("KKB Wahl (+ KKB_ThI)",
+				"alle zulässigen Kombinationen von Kernkompetenzbereichen, wobei "
+						+ kkbThI.getName() + " als Pflicht-KKB immer dabei ist"));
+		headings.add(html("Anmerkung"));
+		headings.add(html(kbBPr));
+		headings.add(html(kbIG));
+		headings.add(html(kkbThI));
+		for (Kompetenzbereich kkb : ModkatFactory.get().getWahlpflichtKKBs())
+			headings.add(html(kkb));
+		headings.add(html("Prl", "Prüfungsleistung"));
+		headings.add(html("Stl", "Studienleistung"));
+		headings.add(html("Summe"));
+
+		for (int col = 0; col < headings.size(); col++)
+			table.setWidget(0, col, headings.get(col));
+
+		table.getRowFormatter().addStyleName(0, "tableHeader");
+	}
+
+
+	private static HTML html(Kompetenzbereich kkb) {
+
+		return html(kkb.getKuerzel().replaceFirst("_", " "), kkb.getName());
+	}
+
+
+	private static HTML html(String text) {
+
+		return new HTML(text, true);
+	}
+
+
+	private static HTML html(String text, String title) {
+
+		HTML result = html(text);
+		result.setTitle(title);
+		return result;
+	}
+
+
+	private void fillTable(final RecommendationProvider recommendation) {
+
+		RepeatingCommand buildRows = new BuildRowsCommand(recommendation);
+
+		Scheduler.get().scheduleIncremental(buildRows);
+	}
+
+	private class BuildRowsCommand implements RepeatingCommand {
+
+		private RecommendationProvider recommendation;
+		private int index = 0;
+
+		private HTMLTable.RowFormatter rf = table.getRowFormatter();
+
+
+		private BuildRowsCommand(RecommendationProvider recommendation) {
+
+			this.recommendation = recommendation;
+		}
+
+
+		@Override
+		public boolean execute() {
+
+			List<KkbWahl> kkbWahlen = recommendation.getRankedKKBWahlen();
+
+			if (index == kkbWahlen.size()) {
+				presenter.finishedTableBuilding();
+				return false;
+			}
+
+			KkbWahl kkbWahl = kkbWahlen.get(index);
+
+			ArrayList<Widget> rowContent = new ArrayList<Widget>();
+
+			rowContent.add(getKkbs(kkbWahl));
+			rowContent.add(getComment(kkbWahl));
+			rowContent.add(getLpOf(kkbWahl, kbBPr));
+			rowContent.add(getLpOf(kkbWahl, kbIG));
+			rowContent.add(getLpOf(kkbWahl, kkbThI));
+
+			for (Kompetenzbereich kkb : ModkatFactory.get()
+					.getWahlpflichtKKBs())
+				rowContent.add(getLpOf(kkbWahl, kkb));
+
+			rowContent.add(html(recommendation.getLpTheory(kkbWahl)));
+			rowContent.add(html(recommendation.getLpPraxis(kkbWahl)));
+			rowContent.add(html(recommendation.getLpTotal(kkbWahl)));
+
+			int row = index + 1;
+			for (int col = 0; col < rowContent.size(); col++) {
+				table.setWidget(row, col, rowContent.get(col));
+
+				table.getCellFormatter().setVerticalAlignment(row, col,
+						HasVerticalAlignment.ALIGN_TOP);
+			}
+
+			for (int col = 2; col < rowContent.size(); col++)
+				table.getCellFormatter().setHorizontalAlignment(row, col,
+						HasHorizontalAlignment.ALIGN_RIGHT);
+
+			if ((row % 2) != 0)
+				rf.addStyleName(row, "FlexTable-OddRow");
+			else
+				rf.addStyleName(row, "FlexTable-EvenRow");
+
+			index++;
+			return true;
+		}
+
+
+		private Widget getComment(KkbWahl kkbWahl) {
+
+			String comments = "";
+			for (String c : kkbWahl.getComments()) {
+				if (!comments.isEmpty())
+					comments += ";<p>";
+				comments += c;
+			}
+
+			Widget comment = new HTML(comments, true);
+			if (!kkbWahl.isPossible()) {
+				DisclosurePanel commentPanel = new DisclosurePanel(
+						"nicht erfüllte Anforderungen");
+				commentPanel.setContent(comment);
+				commentPanel.setAnimationEnabled(true);
+				comment = commentPanel;
+			}
+			return comment;
+		}
+
+
+		private HTML getKkbs(KkbWahl kkbWahl) {
+
+			String result = "";
+			List<Kompetenzbereich> kkbs = kkbWahl.getKkbs();
+			for (Kompetenzbereich kkb : kkbs) {
+				if (kkb == kkbThI)
+					continue;
+
+				if (!result.isEmpty())
+					result += ", ";
+
+				result += kkb.getKuerzel();
+			}
+			return new HTML(result, true);
+		}
+
+
+		private HTML html(int number) {
+
+			return new HTML(number + "", false);
+		}
+
+
+		private HTML getLpOf(KkbWahl kkbWahl, Kompetenzbereich kb) {
+
+			int lpNotShared = recommendation.getLpNotShared(kkbWahl, kb);
+			int lpShared = recommendation.getLpShared(kkbWahl, kb);
+
+			if (lpShared == 0)
+				return html(lpNotShared);
+			else {
+				String text = lpNotShared + " (+" + lpShared + ")";
+				String title = lpNotShared + " LP allein aus diesem KKB, "
+						+ lpShared
+						+ " LP aus Lehrveranstaltungen, die sowohl in diesem "
+						+ "als auch in einem anderen KKB dieser Wahl sind";
+				return RecommendationTable.html(text, title);
+			}
+		}
+	}
+}

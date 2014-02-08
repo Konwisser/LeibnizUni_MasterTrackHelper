@@ -1,0 +1,135 @@
+package de.unihannover.dbs.mth.client.presenter;
+
+
+import java.util.HashMap;
+import java.util.HashSet;
+
+import de.unihannover.dbs.mth.client.model.Kompetenzbereich;
+import de.unihannover.dbs.mth.client.model.Lehrveranstaltung;
+import de.unihannover.dbs.mth.client.model.ModkatFactory;
+import de.unihannover.dbs.mth.client.presenter.HistoryTools.Page;
+import de.unihannover.dbs.mth.client.presenter.PageArgs.MultiLvArg;
+
+
+//public static enum SelectionOpt {
+//	UNKNOWN("undefiniert"), INTEREST("Interesse"), NO_INTEREST(
+//			"Kein Interesse"), INTEREST_NOT_OFFERED(
+//			"Interesse - wenn wieder angeboten"), DONE_IN_BACHELOR(
+//			"bestanden");
+//
+//	public final String humanName;
+//
+//
+//	private SelectionOpt(String humanName) {
+//
+//		this.humanName = humanName;
+//	}
+//}
+
+public class PageArgs {
+
+	public static enum MultiLvArg {
+		lvsOfInterest("Interesse"), lvsOfInterestNotOffered(
+				"Interesse - wenn wieder angeboten"), lvsOfNoInterest(
+				"Kein Interesse"), lvsDoneInBachelor("bestanden");
+
+		public final String humanFriendlyName;
+
+
+		private MultiLvArg(String humanName) {
+
+			this.humanFriendlyName = humanName;
+		}
+
+	}
+
+	Page page;
+
+	HashMap<String, HashSet<Lehrveranstaltung>> multiLvArgs;
+
+	static final HashSet<String> multiLvArgNames = PageArgs
+			.fillMultiLvArgNames();
+
+
+	public PageArgs(Page page) {
+
+		this.page = page;
+
+		multiLvArgs = new HashMap<String, HashSet<Lehrveranstaltung>>();
+		for (String argName : PageArgs.multiLvArgNames)
+			multiLvArgs.put(argName, new HashSet<Lehrveranstaltung>());
+	}
+
+
+	public Page getPage() {
+
+		return page;
+	}
+
+
+	public void setPage(Page page) {
+
+		this.page = page;
+	}
+
+
+	public void setMultiLvArg(PageArgs.MultiLvArg arg,
+			HashSet<Lehrveranstaltung> value) {
+
+		multiLvArgs.put(arg.name(), value);
+	}
+
+
+	public void setMultiLvArg(Kompetenzbereich kb,
+			HashSet<Lehrveranstaltung> value) {
+
+		multiLvArgs.put(PageArgs.kbToArg(kb), value);
+	}
+
+
+	public HashSet<Lehrveranstaltung> getLvs(PageArgs.MultiLvArg arg) {
+
+		return multiLvArgs.get(arg.name());
+	}
+
+
+	public HashSet<Lehrveranstaltung> getLvsDone(Kompetenzbereich kb) {
+
+		return multiLvArgs.get(PageArgs.kbToArg(kb));
+	}
+
+
+	public PageArgs copy() {
+
+		PageArgs copy = new PageArgs(page);
+
+		for (String argName : multiLvArgs.keySet()) {
+			HashSet<Lehrveranstaltung> lvsCopy = new HashSet<Lehrveranstaltung>(
+					multiLvArgs.get(argName));
+			copy.multiLvArgs.put(argName, lvsCopy);
+		}
+
+		return copy;
+	}
+
+
+	private static String kbToArg(Kompetenzbereich kb) {
+
+		return "lvsDoneIn" + kb.getKuerzel();
+	}
+
+
+	private static HashSet<String> fillMultiLvArgNames() {
+
+		HashSet<String> result = new HashSet<String>();
+
+		for (MultiLvArg arg : MultiLvArg.values())
+			result.add(arg.name());
+
+		for (Kompetenzbereich kb : ModkatFactory.get().getAll(
+				Kompetenzbereich.class))
+			result.add(PageArgs.kbToArg(kb));
+
+		return result;
+	}
+}

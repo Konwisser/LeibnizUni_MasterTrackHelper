@@ -1,0 +1,53 @@
+package de.unihannover.dbs.mth.client.model;
+
+
+public class Modul {
+
+	private final long id;
+
+
+	public Modul(long id) {
+
+		this.id = id;
+	}
+
+	private String name;
+
+	private String bemerkung;
+
+
+	public String getName() {
+
+		return name;
+	}
+
+
+	public void setName(String name) {
+
+		this.name = name;
+	}
+
+
+	public String getBemerkung() {
+
+		return bemerkung;
+	}
+
+
+	public void setBemerkung(String bemerkung) {
+
+		this.bemerkung = bemerkung;
+	}
+
+
+	public long getId() {
+
+		return id;
+	}
+
+	@Override
+	public String toString() {
+	
+		return "[Modul] " + name;
+	}
+}

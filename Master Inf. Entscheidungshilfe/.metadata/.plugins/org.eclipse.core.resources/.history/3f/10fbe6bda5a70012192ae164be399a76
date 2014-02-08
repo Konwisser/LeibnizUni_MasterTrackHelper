@@ -1,0 +1,107 @@
+package de.unihannover.dbs.mth.client.model;
+
+
+import java.util.HashSet;
+import java.util.Set;
+
+import de.unihannover.dbs.mth.client.model.ModkatFactory.ModkatEntity;
+
+
+public class Modul implements ModkatEntity {
+
+	private final long id;
+
+	private String name;
+
+	private String englishName;
+	
+	private String bemerkung;
+
+	private String wahlmerkmal;
+
+	private Set<Kompetenzbereich> kompetenzbereiche;
+
+	private Set<Pruefung> pruefungen;
+
+	Modul(long id) {
+
+		this.id = id;
+
+		this.kompetenzbereiche = new HashSet<Kompetenzbereich>();
+		this.pruefungen = new HashSet<Pruefung>();
+	}	
+	public String getName() {
+
+		return name;
+	}
+
+
+	public void setName(String name) {
+
+		this.name = name;
+	}
+
+
+	public String getBemerkung() {
+
+		return bemerkung;
+	}
+
+
+	public void setBemerkung(String bemerkung) {
+
+		this.bemerkung = bemerkung;
+	}
+
+
+	public long getId() {
+
+		return id;
+	}
+
+
+	@Override
+	public String toString() {
+
+		return "[Modul] " + name;
+	}
+
+
+	public String getWahlmerkmal() {
+
+		return wahlmerkmal;
+	}
+
+
+	public void setWahlmerkmal(String wahlmerkmal) {
+
+		this.wahlmerkmal = wahlmerkmal;
+	}
+
+
+	public Set<Kompetenzbereich> getKompetenzbereiche() {
+
+		return kompetenzbereiche;
+	}
+
+
+	
+	public String getEnglishName() {
+	
+		return englishName;
+	}
+
+
+	
+	public void setEnglishName(String englishName) {
+	
+		this.englishName = englishName;
+	}
+
+
+	
+	public Set<Pruefung> getPruefungen() {
+	
+		return pruefungen;
+	}
+}

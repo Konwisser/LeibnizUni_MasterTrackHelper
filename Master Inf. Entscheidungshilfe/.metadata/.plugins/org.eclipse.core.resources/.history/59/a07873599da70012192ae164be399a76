@@ -1,0 +1,129 @@
+package de.unihannover.dbs.mth.client.view;
+
+import java.beans.Beans;
+import java.util.Set;
+
+import com.google.gwt.user.client.ui.Composite;
+
+import de.unihannover.dbs.mth.client.model.Kompetenzbereich;
+import de.unihannover.dbs.mth.client.model.PruefbareEinheit;
+import de.unihannover.dbs.mth.client.model.Pruefung;
+import de.unihannover.dbs.mth.client.model.Semesterangebot;
+
+import com.google.gwt.user.client.ui.Anchor;
+import com.google.gwt.user.client.ui.DisclosurePanel;
+import com.google.gwt.user.client.ui.FlexTable;
+import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.HasVerticalAlignment;
+import com.google.gwt.user.client.ui.HTML;
+
+public class SemesterAngebotCell extends Composite {
+	private DisclosurePanel disclosurePanel;
+	private FlexTable table;
+
+	public SemesterAngebotCell(Semesterangebot angebot) {
+
+		buildGUI();
+
+		if (!Beans.isDesignTime())
+			fillData(angebot);
+	}
+
+	private void fillData(Semesterangebot angebot) {
+		String header = angebot.getVorlesung().toString();
+		disclosurePanel.getHeaderTextAccessor().setText(header);
+
+		String[] content = { angebot.getBonus(), angebot.getSemesterthema(),
+				angebot.getLernziele(), angebot.getStoffplan(),
+				angebot.getVorkenntnisse(), angebot.getLiteratur(),
+				angebot.getBesonderheiten(), angebot.getBemerkung() };
+
+		for (int row = 0; row < content.length; row++)
+			table.setWidget(row, 1, new HTML(content[row], true));
+
+		table.setWidget(8, 1, new Anchor("[not implemented yet]"));
+		// String linkText = getLinkText(angebot);
+		// if (linkText != null) {
+		// table.setWidget(7, 1, new Anchor("[KKB Name]", true, linkText));
+		// }
+	}
+
+	private String getLinkText(Semesterangebot angebot) {
+		Set<PruefbareEinheit> pruefbareEinheiten = angebot
+				.getLehrveranstaltung().getPruefbareEinheiten();
+		Pruefung firstPruefung = null;
+		for (PruefbareEinheit pe : pruefbareEinheiten) {
+			for (Pruefung p : pe.getPruefungen()) {
+				firstPruefung = p;
+				break;
+			}
+			break;
+		}
+		if (firstPruefung == null)
+			return null;
+
+		Set<Kompetenzbereich> kompetenzBereiche = firstPruefung
+				.getModul().getKompetenzbereiche();
+		Kompetenzbereich firstKb = null;
+		for (Kompetenzbereich kb : kompetenzBereiche) {
+			firstKb = kb;
+			break;
+		}
+		if (firstKb == null)
+			return null;
+
+		long sID = angebot.getId();
+		long modulID = firstPruefung.getModulID();
+		long kbID = firstKb.getId();
+
+		String linkText = "http://www.dbs.uni-hannover.de/fbinf/lvk/sanginfo.php?sid="
+				+ sID + "&fachid=" + modulID + "&kid=" + kbID;
+		return linkText;
+	}
+
+	private void buildGUI() {
+		disclosurePanel = new DisclosurePanel("[Vorlesung und Prüfung]");
+		disclosurePanel.setOpen(false);
+		disclosurePanel.setAnimationEnabled(true);
+		disclosurePanel.setWidth("100%");
+		initWidget(disclosurePanel);
+
+		table = new FlexTable();
+		table.setStyleName((String) null);
+		table.setCellPadding(6);
+		table.getColumnFormatter().setStyleName(0, "definingLabel");
+		disclosurePanel.setContent(table);
+
+		Label lblBonus = new Label("Bonus:");
+		table.setWidget(0, 0, lblBonus);
+
+		Label lblSemesterthema = new Label("Semesterthema:");
+		table.setWidget(1, 0, lblSemesterthema);
+
+		Label lblLernziele = new Label("Lernziele:");
+		table.setWidget(2, 0, lblLernziele);
+
+		Label lblStoffplan = new Label("Stoffplan:");
+		table.setWidget(3, 0, lblStoffplan);
+
+		Label lblVorkenntnisse = new Label("Vorkenntnisse:");
+		table.setWidget(4, 0, lblVorkenntnisse);
+
+		Label lblLiteraturnempfehlungen = new Label("Literaturempfehlungen:");
+		table.setWidget(5, 0, lblLiteraturnempfehlungen);
+
+		Label lblBesonderheiten = new Label("Besonderheiten:");
+		table.setWidget(6, 0, lblBesonderheiten);
+
+		Label lblBemerkung = new Label("Bemerkung:");
+		table.setWidget(7, 0, lblBemerkung);
+
+		Label lblImModulkatalog = new Label("Im Modulkatalog:");
+		table.setWidget(8, 0, lblImModulkatalog);
+
+		for (int row = 0; row < table.getRowCount(); row++)
+			table.getCellFormatter().setVerticalAlignment(row, 0,
+					HasVerticalAlignment.ALIGN_TOP);
+	}
+
+}

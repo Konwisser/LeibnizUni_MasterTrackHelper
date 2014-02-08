@@ -1,0 +1,109 @@
+package de.unihannover.dbs.mth.client.gui;
+
+import java.beans.Beans;
+import java.util.HashSet;
+import java.util.List;
+
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.RepeatingCommand;
+import com.google.gwt.event.logical.shared.ValueChangeEvent;
+import com.google.gwt.event.logical.shared.ValueChangeHandler;
+import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.ui.CheckBox;
+import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.FlexTable;
+import com.google.gwt.user.cellview.client.DataGrid;
+import com.google.gwt.user.client.ui.Button;
+
+import de.unihannover.dbs.mth.client.modkat.Lehrveranstaltung;
+import de.unihannover.dbs.mth.client.modkat.Modkat;
+import com.google.gwt.user.client.ui.HasHorizontalAlignment;
+
+public class InterestSelectionTable extends Composite {
+
+	private FlexTable table;
+
+	private HashSet<Lehrveranstaltung> selectedLV;
+
+	public InterestSelectionTable() {
+		selectedLV = new HashSet<Lehrveranstaltung>();
+
+		buildGUI();
+	}
+
+	public void addSelected(Lehrveranstaltung lv) {
+		selectedLV.add(lv);
+		Window.alert(lv.getTitel() + " selected. Total selected: "
+				+ selectedLV.size());
+	}
+
+	public void removeFromSelected(Lehrveranstaltung lv) {
+		selectedLV.remove(lv);
+	}
+
+	public void fillTableData() {
+		final List<Lehrveranstaltung> lehrveranstaltungen = Modkat.get()
+				.getAllLehrveranstaltungen();
+
+		RepeatingCommand buildRows = new RepeatingCommand() {
+
+			private int index = 0;
+
+			@Override
+			public boolean execute() {
+				if (index == lehrveranstaltungen.size())
+					return false;
+
+				int rowIndex = index + 1;
+
+				Lehrveranstaltung lv = lehrveranstaltungen.get(index);
+
+				CheckBox chkBox = new CheckBox();
+				table.setWidget(rowIndex, 0, chkBox);
+				table.getCellFormatter().setHorizontalAlignment(rowIndex, 0,
+						HasHorizontalAlignment.ALIGN_CENTER);
+
+				chkBox.addValueChangeHandler(new LvCheckBoxChangeHandler(lv));
+
+				LehrveranstaltungCell lvCell = new LehrveranstaltungCell(lv);
+				table.setWidget(rowIndex, 1, lvCell);
+
+				index++;
+				return true;
+			}
+		};
+
+		Scheduler.get().scheduleIncremental(buildRows);
+	}
+
+	private void buildGUI() {
+		table = new FlexTable();
+		table.setStyleName("table");
+		table.setCellPadding(6);
+		table.setText(0, 0, "Interesse");
+		table.setText(0, 1, "Lehrveranstaltung");
+		table.getRowFormatter().addStyleName(0, "tableHeader");
+		initWidget(table);
+		table.setWidth("474px");
+		table.getCellFormatter().setHorizontalAlignment(0, 0,
+				HasHorizontalAlignment.ALIGN_CENTER);
+	}
+
+	private class LvCheckBoxChangeHandler implements
+			ValueChangeHandler<Boolean> {
+
+		private Lehrveranstaltung lv;
+
+		public LvCheckBoxChangeHandler(Lehrveranstaltung lv) {
+			this.lv = lv;
+		}
+
+		@Override
+		public void onValueChange(ValueChangeEvent<Boolean> event) {
+			if (event.getValue())
+				addSelected(lv);
+			else
+				removeFromSelected(lv);
+		}
+	}
+}

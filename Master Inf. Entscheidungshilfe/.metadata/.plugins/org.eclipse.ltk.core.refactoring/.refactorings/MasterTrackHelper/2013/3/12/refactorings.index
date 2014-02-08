@@ -1,0 +1,210 @@
+1363790340680	Move compilation unit
+1363790356813	Rename type 'Modkat'
+1363791512460	Rename local variable 'count'
+1363867224440	Delete element
+1363867473408	Rename type 'Weiterfuehrend'
+1363867480829	Rename field 'weiterfuehrend'
+1363868059785	Rename field 'semBemerkung'
+1363869544863	Rename field 'sid'
+1363873829925	Extract local variable 'parts'
+1363875861843	Rename type 'Vorlesung'
+1363875871482	Rename method 'setVorlesung'
+1363875879258	Rename field 'vorlesung'
+1363875990336	Rename type 'SemesterAngebotsArt'
+1363876252878	Rename local variable 'sid'
+1363876739639	Extract local variable 'sID'
+1363876902811	Extract method 'readSemesterangebot'
+1363876923295	Extract method 'readSemester'
+1363877104779	Rename method 'setEnglish'
+1363877113974	Rename field 'english'
+1363877120802	Rename local variable 'english'
+1363877131183	Rename method 'getEnglish'
+1363877542033	Rename method 'setEnglish'
+1363877549808	Rename field 'english'
+1363877554343	Rename local variable 'english'
+1363877560236	Rename method 'getEnglish'
+1363878287470	Extract local variable 'weiterfuehrend'
+1363879754601	Extract local variable 'nextPart'
+1363881131494	Rename resource 'notizen'
+1363893108650	Extract local variable 'headerText'
+1363894082070	Extract method 'buldGui'
+1363901947799	Convert anonymous class to nested
+1363905737698	Rename type 'ModkatCommunicator'
+1363905869848	Rename local variable 'result'
+1363905919501	Extract method 'parseCSV'
+1363905953222	Move compilation unit
+1363908084189	Rename resource 'Export2ET0954905.csv'
+1363908154104	Extract local variable 'csvLines'
+1363911375596	Extract local variable 'pNrString'
+1363912807332	Extract local variable 'lpString'
+1363913856569	Extract method 'readTestData'
+1363914264873	Move compilation unit
+1363914382301	Move compilation unit
+1363914445682	Extract method 'getRealData'
+1363914665211	Move folder
+1363950751475	Move compilation unit
+1363952680426	Delete element
+1363952983134	Extract method 'buildGUI'
+1363952997213	Extract method 'fillTableData'
+1363953292265	Rename local variable 'horizontalPanel'
+1363953961318	Rename local variable 'dockPanel'
+1363954117273	Rename field 'lblempfangeDaten'
+1363966822404	Rename method 'getInstance'
+1363975066678	Extract local variable 'lehrveranstaltungen'
+1363977631493	Delete element
+1364034132586	Rename field 'nlnlbljedesJahrWinter'
+1364034225143	Rename local variable 'nlnlblFrequenz'
+1364034235915	Rename local variable 'nlnlblBemerkung'
+1364034286663	Rename local variable 'lblLblbemerkungcontent'
+1364034352293	Extract method 'buildGUI'
+1364034409064	Rename method 'buildGUI'
+1364034791061	Convert local variable 'disclosurePanel' to field
+1364035766633	Rename local variable 'lblBemerkungcontent'
+1364036185354	Rename field 'frequenzSem'
+1364036299967	Rename method 'getFrequenzSem'
+1364036317605	Rename local variable 'winter'
+1364036386146	Rename method 'setFrequenzSem'
+1364036547418	Convert local variable 'lblBemerkungContent' to field
+1364036859674	Rename method 'readLeahrveranstaltung'
+1364038657135	Rename local variable 'lblNewLabel'
+1364039412152	Rename local variable 'verticalPanel_1'
+1364039421098	Convert local variable 'belowStatusPanel' to field
+1364040010905	Rename type 'HistoryChangeHandler'
+1364041286839	Rename enum constant 'loadFromServer'
+1364041341726	Rename method 'addToken'
+1364042361230	Rename type 'MainFrame'
+1364042593665	Rename local variable 'mainFrame'
+1364044305239	Copy compilation unit
+1364045075347	Rename method 'buildGUI'
+1364046448106	Extract method 'buildTableHeader'
+1364050445873	Rename local variable 'flexTable'
+1364051394321	Rename local variable 'flexTable'
+1364052053975	Extract method 'fillLVData'
+1364052073611	Extract method 'fillSemesterangebotData'
+1364052099751	Extract local variable 'angebote'
+1364052299756	Rename local variable 'angeobte'
+1364052373216	Extract local variable 'semester1'
+1364052380412	Extract local variable 'semester2'
+1364052991869	Extract local variable 'semester'
+1364053177017	Extract method 'buildGUI'
+1364053570428	Rename field 'flexTable'
+1364054248410	Rename field 'readableName'
+1364059920671	Extract local variable 'kompetenzBereiche'
+1364060134876	Extract method 'getLinkText'
+1364063686804	Rename method 'fillLVData'
+1364063760004	Extract method 'setHeaderText'
+1364063861275	Rename method 'fillLVDetailsData'
+1364063925445	Extract method 'buildDetailsGUI'
+1364063944782	Rename method 'buildGUI'
+1364067564654	Rename local variable 'first'
+1364067763782	Rename local variable 'firstEinheit'
+1364067795026	Rename local variable 'firstPruefung'
+1364068064329	Rename local variable 'minPruefungPerEinheit'
+1364068073594	Rename local variable 'maxPruefungPerEinheit'
+1364070874171	Extract method 'buildLVDetailsGUI'
+1364070903598	Extract method 'buildSemesterangeboteGUI'
+1364070942746	Rename method 'buildClodedGUI'
+1364070986786	Rename method 'fillSemesterangebotData'
+1364071177134	Rename field 'lblkkbthiKkbse'
+1364071498246	Rename field 'lblLeistungspunktecontent'
+1364071649433	Rename field 'lblNewLabel'
+1364071859555	Rename local variable 'lblPrfung'
+1364071873645	Rename field 'pruefungContent'
+1364073315990	Extract local variable 'leistungspunkte'
+1364074294110	Delete element
+1364075926426	Copy file
+1364075992414	Copy compilation units
+1364076021764	Copy compilation unit
+1364076067794	Copy compilation units
+1364076101763	Copy compilation units
+1364076131158	Copy package
+1364076173609	Copy files
+1364076231219	Copy file
+1364081456233	Rename method 'fillTableData'
+1364081630514	Rename method 'fillTableData'
+1364081996113	Copy compilation unit
+1364121040448	Rename field 'lblSommer'
+1364121053450	Rename field 'lblWinter'
+1364121337841	Extract local variable 'frequenz'
+1364124951168	Rename field 'lblKompetenzbereicheContent'
+1364128578537	Rename field 'lblLeistungContent'
+1364129516666	Extract method 'getLeistung'
+1364129532508	Rename method 'getLeistung'
+1364130968064	Rename method 'getSelectedLV'
+1364131139580	Move compilation unit
+1364131316047	Delete element
+1364131402971	Rename package 'de.unihannover.dbs.mth.client.modkat'
+1364131429929	Rename package 'de.unihannover.dbs.mth.client.gui'
+1364131601711	Rename type 'GUI'
+1364131734386	Move compilation unit
+1364131794560	Copy compilation unit
+1364131993663	Rename package 'de.unihannover.dbs.mth.client.tools'
+1364132083276	Move compilation unit
+1364132089137	Delete element
+1364132407048	Rename package 'de.unihannover.dbs.mth.client.modkat'
+1364132732825	Copy compilation unit
+1364132971467	Rename type 'Modkat'
+1364133035351	Move compilation unit
+1364133263900	Delete element
+1364133357655	Rename local variable 'lvOfInterest'
+1364133502319	Rename method 'getRecommendation'
+1364133946093	Rename local variable 'kompetenzbereicheOfInterest'
+1364134340187	Extract method 'putLvInKb'
+1364134404837	Rename local variable 'kbOfInterest'
+1364135135344	Rename local variable 'kkbOfInterest'
+1364135312394	Extract method 'fillKkbToLvMap'
+1364135363642	Rename method 'fillKkbToLvMap'
+1364135641846	Copy compilation unit
+1364135847928	Rename method 'isKernkompetenzbereich'
+1364138903039	Rename field 'lehrveranstaltungen'
+1364139433201	Rename field 'lvsInKkb1'
+1364139439263	Rename field 'lvsInKkb2'
+1364139706155	Rename type 'WhlpflichKkbKombi2'
+1364139719649	Rename type 'WahlpflichtKkbKombi2'
+1364139793944	Copy compilation unit
+1364139822649	Rename field 'kb1'
+1364139827766	Rename field 'kb2'
+1364139833506	Rename local variable 'kb1'
+1364139838353	Rename local variable 'kb2'
+1364139856473	Rename method 'getKb1'
+1364140129101	Delete element
+1364140141578	Copy compilation unit
+1364140382415	Rename field 'lvsInBothKkb'
+1364141208032	Rename type 'Wahlpflicht2KkbKombi'
+1364141213038	Rename type 'Wahlpflicht3KkbKombi'
+1364141429013	Rename local variable 'lvsOfInterest'
+1364141443249	Rename local variable 'lvsOfInterest'
+1364141870799	Delete element
+1364141977744	Copy compilation unit
+1364141997318	Copy compilation unit
+1364142449300	Extract method 'createWahl3Kkbs'
+1364142468795	Rename method 'createWahl3Kkbs'
+1364142478841	Rename local variable 'allWahlpflicht3Kkbs'
+1364142699283	Rename local variable 'allWahl3Kkbs'
+1364144870855	Rename local variable 'lvsOfInterest'
+1364145270141	Extract method 'fillSets'
+1364145319148	Extract method 'calcLeistungspunkte'
+1364148137784	Rename local variable 'wahlpflichtKKBs'
+1364149164942	Rename local variable 'maxLpForKkb'
+1364151397672	Rename field 'bothPossible'
+1364151490372	Rename type 'Wahlpflicht2Kkb'
+1364151502131	Rename type 'Wahlpflicht3Kkb'
+1364151570466	Rename field 'lvsInBothKkb'
+1364151591744	Rename method 'getLvsInBothKkb'
+1364153399238	Rename local variable 'lvKbs'
+1364155089721	Rename field 'lvsOnlyInOneKkb'
+1364155219940	Extract method 'fillLvsInTwoKkb'
+1364155273361	Extract method 'fillLvsInOneKkb'
+1364155971731	Rename field 'kkbsPossible'
+1364156508543	Extract method 'analyzeRegularitiesForEachKkb'
+1364158134383	Move type 'PairIterator' to new file
+1364158318524	Infer generic type arguments
+1364158347694	Infer generic type arguments
+1364159551337	Delete elements
+1364160181444	Rename method 'nextI1'
+1364160203859	Rename method 'nextI2'
+1364162168751	Delete element
+1364162850000	Extract local variable 'minLp'
+1364162893432	Rename local variable 'minLp'
+1364163042688	Rename local variable 'pruefungsleistungGewicht'
+1364163049815	Rename local variable 'studienleistungGewicht'

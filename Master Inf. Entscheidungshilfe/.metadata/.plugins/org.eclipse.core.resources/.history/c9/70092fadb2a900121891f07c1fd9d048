@@ -1,0 +1,297 @@
+package de.unihannover.dbs.mth.client.presenter;
+
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import de.unihannover.dbs.mth.client.model.Kompetenzbereich;
+import de.unihannover.dbs.mth.client.model.Lehrveranstaltung;
+import de.unihannover.dbs.mth.client.model.ModkatFactory;
+import de.unihannover.dbs.mth.client.presenter.HistoryTools.Page;
+import de.unihannover.dbs.mth.client.presenter.PageArgs.MultiLvArg;
+import de.unihannover.dbs.mth.client.presenter.LvFilters.*;
+import de.unihannover.dbs.mth.client.presenter.MTHPresenter.PagePresenter;
+import de.unihannover.dbs.mth.client.view.LvSelectionView;
+import de.unihannover.dbs.mth.client.view.LvSelectionView.InterestSelPresenter;
+import de.unihannover.dbs.mth.client.view.View;
+
+
+public class InterestSelPresenterImpl implements InterestSelPresenter,
+		PagePresenter {
+
+	private static final String NO_FILTER = "Kein Filter";
+
+	private static final String UNKNOWN_SELECTION = "unbekannt";
+
+	private HashSet<LvFilter> filters = new HashSet<LvFilter>();
+
+	private LvSelectionView view;
+
+	private UserSelectionFilter userSelectionFilter;
+
+	private PageArgs pageArgs;
+
+	private ArrayList<String> selFilterOptionsSorted;
+
+	private HashMap<Lehrveranstaltung, String> lvToSelection;
+	private HashMap<String, HashSet<Lehrveranstaltung>> selToLvsWithThisSelection;
+
+
+	public InterestSelPresenterImpl() {
+
+		fillSelections();
+
+		filters.add(new HasKbFilter());
+		filters.add(new NoKlausurFilter());
+		filters.add(new OnlyMyNfFilter());
+		filters.add(new NotOverFilter());
+	}
+
+
+	private void fillSelections() {
+
+		lvToSelection = new HashMap<Lehrveranstaltung, String>();
+		selFilterOptionsSorted = new ArrayList<String>();
+
+		selToLvsWithThisSelection = new HashMap<String, HashSet<Lehrveranstaltung>>();
+
+		selFilterOptionsSorted.add(NO_FILTER);
+
+		for (MultiLvArg arg : MultiLvArg.values()) {
+			addSelOption(arg.humanFriendlyName, arg);
+			selToLvsWithThisSelection.put(arg.humanFriendlyName,
+					pageArgs.getLvs(arg));
+		}
+
+		ArrayList<Kompetenzbereich> kkbsSorted;
+		kkbsSorted = new ArrayList<Kompetenzbereich>();
+		for (Kompetenzbereich kb : ModkatFactory.get().getAll(
+				Kompetenzbereich.class))
+			if (kb.isKkb())
+				kkbsSorted.add(kb);
+
+		Collections.sort(kkbsSorted);
+
+		for (Kompetenzbereich kkb : kkbsSorted) {
+			String kkbSelOption = kbToSelectionText(kkb);
+			addSelOption(kkbSelOption, kkb);
+			selToLvsWithThisSelection.put(kkbSelOption,
+					pageArgs.getLvsDone(kkb));
+		}
+	}
+
+
+	private void addSelOption(String selOption, Object value) {
+
+		selectionValues.put(selOption, value);
+		selFilterOptionsSorted.add(selOption);
+	}
+
+
+	@Override
+	public void btnCalcRecommendationClicked() {
+
+		PageArgs recPageAndArgs = pageArgs.copy();
+		recPageAndArgs.setPage(Page.recommendations);
+
+		HistoryTools.newItem(recPageAndArgs);
+	}
+
+
+	@Override
+	public void showView(PageArgs pageArgs) {
+
+		this.pageArgs = pageArgs;
+
+		Lehrveranstaltung masterThesis = ModkatFactory.get().get(
+				Lehrveranstaltung.class, Lehrveranstaltung.LV_MASTER_THESIS_ID);
+
+		pageArgs.getLvs(MultiLvArg.lvsOfInterest).add(masterThesis);
+
+		View.get().setBody(view);
+
+		if (view == null) {
+			view = new LvSelectionView(this);
+			fillTable();
+		} else
+			View.get().setStatusText("fertig");
+	}
+
+
+	private Set<Lehrveranstaltung> applyFilters(
+			Collection<Lehrveranstaltung> lvs) {
+
+		HashSet<Lehrveranstaltung> result = new HashSet<Lehrveranstaltung>();
+
+		for (Lehrveranstaltung lv : lvs) {
+
+			boolean valid = true;
+			for (LvFilter filter : filters)
+				if (!filter.valid(lv)) {
+					valid = false;
+					break;
+				}
+
+			if (valid)
+				result.add(lv);
+		}
+
+		return result;
+	}
+
+
+	@Override
+	public void finishedTableBuilding() {
+
+		View.get().setStatusText("fertig");
+	}
+
+
+	@Override
+	public void btnFilterClicked() {
+
+		View.get().setStatusText("filtere ... ");
+
+		fillTable();
+	}
+
+
+	private void fillTable() {
+
+		Set<Lehrveranstaltung> lvsFiltered = applyFilters(ModkatFactory.get()
+				.getAll(Lehrveranstaltung.class));
+
+		ArrayList<Lehrveranstaltung> lvsFilteredSorted = new ArrayList<Lehrveranstaltung>(
+				lvsFiltered);
+
+		Collections.sort(lvsFilteredSorted, new LvComparator());
+
+		view.fillTable(lvsFilteredSorted);
+	}
+
+
+	@Override
+	public void cmbSelectionFilterChanged(String newValue) {
+
+		if (newValue.equals(NO_FILTER)) {
+			filters.remove(userSelectionFilter);
+		} else {
+			userSelectionFilter = new UserSelectionFilter(
+					getLvsWithSelection(newValue));
+			filters.add(userSelectionFilter);
+		}
+
+		fillTable();
+	}
+
+
+	private HashSet<Lehrveranstaltung> getLvsWithSelection(
+			String filterSelection) {
+
+		Object selValue = selectionValues.get(filterSelection);
+
+		if (MultiLvArg.class.isInstance(selValue))
+			return pageArgs.getLvs((MultiLvArg) selValue);
+
+		if (Kompetenzbereich.class.isInstance(selValue))
+			return pageArgs.getLvsDone((Kompetenzbereich) selValue);
+
+		throw new IllegalStateException("unexpected filter selection!");
+	}
+
+
+	private String kbToSelectionText(Kompetenzbereich kb) {
+
+		return "bestanden in " + kb.getKuerzel();
+	}
+
+
+	@Override
+	public void lvSelectionChanged(Lehrveranstaltung lv, String selection) {
+
+		HashSet<Lehrveranstaltung> prevContainingSet = lvToSelection
+				.get(lv);
+		if (prevContainingSet != null)
+			prevContainingSet.remove(lv);
+
+		if (selection.equals(UNKNOWN_SELECTION)) {
+			lvToSelection.remove(lv);
+			return;
+		}
+
+		HashSet<Lehrveranstaltung> newContainingSet = getLvsWithSelection(selection);
+		newContainingSet.add(lv);
+		lvToSelection.put(lv, newContainingSet);
+	}
+
+
+	@Override
+	public List<String> getSelectionOptions(Lehrveranstaltung lv) {
+
+		ArrayList<String> options = new ArrayList<String>();
+
+		options.add(UNKNOWN_SELECTION);
+
+		for (MultiLvArg arg : MultiLvArg.values())
+			options.add(arg.humanFriendlyName);
+
+		Set<Kompetenzbereich> kbs = lv.getKompetenzbereiche();
+		if (kbs.size() < 2)
+			return options;
+
+		for (Kompetenzbereich kkb : getSortedKkbs(lv))
+			options.add(kbToSelectionText(kkb));
+
+		return options;
+	}
+
+
+	@Override
+	public int getSelectedIndex(Lehrveranstaltung lv) {
+
+		String curSelection = lvToSelection.get(lv);
+		if (curSelection == null)
+			return 0; // which is unknown selection
+
+		Object selValue = selectionValues.get(lv);
+
+		// first is "unknown selection"
+		if (MultiLvArg.class.isInstance(selValue))
+			return ((MultiLvArg) selValue).ordinal() + 1;
+
+		// getting here means lv has 2 KKB and one of these is selected
+		if (Kompetenzbereich.class.isInstance(selValue)) {
+			int multiLvArgCount = MultiLvArg.values().length;
+			List<Kompetenzbereich> sortedKkbs = getSortedKkbs(lv);
+			Kompetenzbereich selKkb = (Kompetenzbereich) selValue;
+
+			if (selKkb == sortedKkbs.get(0))
+				return multiLvArgCount + 1;
+			else
+				return multiLvArgCount + 2;
+		}
+
+		throw new IllegalStateException("unexpacted lv selection!");
+	}
+
+
+	private List<Kompetenzbereich> getSortedKkbs(Lehrveranstaltung lv) {
+
+		ArrayList<Kompetenzbereich> result = new ArrayList<Kompetenzbereich>(
+				lv.getKompetenzbereiche());
+		Collections.sort(result);
+		return result;
+	}
+
+
+	@Override
+	public List<String> getUserSelectionFilterOptions() {
+
+		return selFilterOptionsSorted;
+	}
+}

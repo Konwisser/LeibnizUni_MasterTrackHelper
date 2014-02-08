@@ -1,0 +1,10 @@
+1366801969624	Rename type 'LeftRightBorderTest'
+1366803149541	Delete element
+1366803590565	Extract method 'buildUI'
+1366803606860	Extract method 'fillContent'
+1366804461455	Extract method 'addHandlers'
+1366804581766	Convert local variable 'btnCalcRecommendations1' to field
+1366804595483	Convert local variable 'btnBerechneEmpfehlungen' to field
+1366804617038	Convert local variable 'btnFilter' to field
+1366804663886	Rename field 'btnBerechneEmpfehlungen'
+1366804676923	Rename field 'btnCalcRecommendations1'

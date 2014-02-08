@@ -1,0 +1,288 @@
+package de.unihannover.dbs.mth.client.model;
+
+
+import de.unihannover.dbs.mth.client.model.ModkatFactory.ModkatEntity;
+import de.unihannover.dbs.mth.client.model.ModkatFactory.SemAngArt;
+
+
+public class Semesterangebot implements ModkatEntity {
+
+	/**
+	 * ID des Semesterangebotes
+	 */
+	private final long id;
+
+	/**
+	 * Prüfungsart decodiert
+	 */
+	private String pruefungsArt;
+
+	private String bonus;
+
+	private String link;
+
+	private String vorkenntnisse;
+
+	private String lernziele;
+
+	private String literatur;
+
+	private String stoffplan;
+
+	/**
+	 * Bemerkung zum Semesterangebot
+	 */
+	private String bemerkung;
+
+	private String besonderheiten;
+
+	/**
+	 * 'Nur Prüfung' oder 'Lehrveranstaltung und Prüfung'
+	 */
+	private SemAngArt art;
+
+	private String semesterthema;
+
+	private String sprache;
+
+	/**
+	 * Lehrveranstaltung, zu der dieses Semesterangebot gehört.
+	 */
+	private Lehrveranstaltung lehrveranstaltung;
+
+	/**
+	 * Das Semester, zu dem dieses Semesterangebot gehört
+	 */
+	private Semester semester;
+
+	/**
+	 * Aufzählung von Namen der Dozenten
+	 */
+	private String dozenten;
+
+	/**
+	 * Aufzählung von Namen der Prüfer
+	 */
+	private String pruefer;
+
+	/**
+	 * Aufzählung von Namen der Betreuer
+	 */
+	private String betreuer;
+
+
+	Semesterangebot(long id) {
+
+		this.id = id;
+	}
+
+
+	public String getPruefungsArt() {
+
+		return pruefungsArt;
+	}
+
+
+	public void setPruefungsArt(String pruefungsArt) {
+
+		this.pruefungsArt = pruefungsArt;
+	}
+
+
+	public String getBonus() {
+
+		return bonus;
+	}
+
+
+	public void setBonus(String bonus) {
+
+		this.bonus = bonus;
+	}
+
+
+	public String getLink() {
+
+		return link;
+	}
+
+
+	public void setLink(String link) {
+
+		this.link = link;
+	}
+
+
+	public String getVorkenntnisse() {
+
+		return vorkenntnisse;
+	}
+
+
+	public void setVorkenntnisse(String vorkenntnisse) {
+
+		this.vorkenntnisse = vorkenntnisse;
+	}
+
+
+	public String getLernziele() {
+
+		return lernziele;
+	}
+
+
+	public void setLernziele(String lernziele) {
+
+		this.lernziele = lernziele;
+	}
+
+
+	public String getLiteratur() {
+
+		return literatur;
+	}
+
+
+	public void setLiteratur(String literatur) {
+
+		this.literatur = literatur;
+	}
+
+
+	public String getStoffplan() {
+
+		return stoffplan;
+	}
+
+
+	public void setStoffplan(String stoffplan) {
+
+		this.stoffplan = stoffplan;
+	}
+
+
+	public String getBemerkung() {
+
+		return bemerkung;
+	}
+
+
+	public void setBemerkung(String bemerkung) {
+
+		this.bemerkung = bemerkung;
+	}
+
+
+	public String getBesonderheiten() {
+
+		return besonderheiten;
+	}
+
+
+	public void setBesonderheiten(String besonderheiten) {
+
+		this.besonderheiten = besonderheiten;
+	}
+
+
+	public SemAngArt getVorlesung() {
+
+		return art;
+	}
+
+
+	public void setArt(SemAngArt art) {
+
+		this.art = art;
+	}
+
+
+	public String getSemesterthema() {
+
+		return semesterthema;
+	}
+
+
+	public void setSemesterthema(String semesterthema) {
+
+		this.semesterthema = semesterthema;
+	}
+
+
+	public String getSprache() {
+
+		return sprache;
+	}
+
+
+	public void setSprache(String sprache) {
+
+		this.sprache = sprache;
+	}
+
+
+	public Lehrveranstaltung getLehrveranstaltung() {
+
+		return lehrveranstaltung;
+	}
+
+
+	public void setLehrveranstaltung(Lehrveranstaltung lehrveranstaltung) {
+
+		this.lehrveranstaltung = lehrveranstaltung;
+	}
+
+
+	public Semester getSemester() {
+
+		return semester;
+	}
+
+
+	public void setSemester(Semester semester) {
+
+		this.semester = semester;
+	}
+
+
+	public String getDozenten() {
+
+		return dozenten;
+	}
+
+
+	public void setDozenten(String dozenten) {
+
+		this.dozenten = dozenten;
+	}
+
+
+	public String getPruefer() {
+
+		return pruefer;
+	}
+
+
+	public void setPruefer(String pruefer) {
+
+		this.pruefer = pruefer;
+	}
+
+
+	public String getBetreuer() {
+
+		return betreuer;
+	}
+
+
+	public void setBetreuer(String betreuer) {
+
+		this.betreuer = betreuer;
+	}
+
+
+	public long getId() {
+
+		return id;
+	}
+}

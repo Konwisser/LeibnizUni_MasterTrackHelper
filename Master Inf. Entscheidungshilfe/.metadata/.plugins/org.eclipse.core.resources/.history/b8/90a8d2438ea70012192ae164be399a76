@@ -1,0 +1,79 @@
+package de.unihannover.dbs.mth.client.model;
+
+import java.util.HashSet;
+import java.util.Set;
+
+public class PruefbareEinheit {
+
+	private final long id;
+
+	private String pruefungsArten;
+
+	private int leistungsPunkte;
+
+	private boolean benotet;
+
+	private String bemerkung;
+	
+	/**
+	 * Die Prüfungen, die zu dieser prüfbaren Einheit gehören
+	 */
+	private Set<Pruefung> pruefungen;
+
+	// TODO: gibt es Fälle, in denen es meherer Lehrveranstaltungen zu einer
+	// prüfbaren Einheit gibt?
+	/**
+	 * Lehrveranstaltungen, die durch diese Einheit geprüft werden
+	 */
+	private Set<Lehrveranstaltung> lehrveranstaltungen;
+
+	PruefbareEinheit(long id) {
+		this.id = id;
+		this.pruefungen = new HashSet<Pruefung>();
+		this.lehrveranstaltungen = new HashSet<Lehrveranstaltung>();
+	}
+
+	public String getPruefungsArten() {
+		return pruefungsArten;
+	}
+
+	public void setPruefungsArten(String pruefungsArten) {
+		this.pruefungsArten = pruefungsArten;
+	}
+
+	public int getLeistungsPunkte() {
+		return leistungsPunkte;
+	}
+
+	public void setLeistungsPunkte(int leistungsPunkte) {
+		this.leistungsPunkte = leistungsPunkte;
+	}
+
+	public boolean isBenotet() {
+		return benotet;
+	}
+
+	public void setBenotet(boolean benotet) {
+		this.benotet = benotet;
+	}
+
+	public long getId() {
+		return id;
+	}
+
+	public Set<Pruefung> getPruefungen() {
+		return pruefungen;
+	}
+
+	public Set<Lehrveranstaltung> getLehrveranstaltungen() {
+		return lehrveranstaltungen;
+	}
+
+	public String getBemerkung() {
+		return bemerkung;
+	}
+
+	public void setBemerkung(String bemerkung) {
+		this.bemerkung = bemerkung;
+	}
+}

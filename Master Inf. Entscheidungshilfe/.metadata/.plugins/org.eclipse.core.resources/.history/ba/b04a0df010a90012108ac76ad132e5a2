@@ -1,0 +1,178 @@
+package de.unihannover.dbs.mth.client.presenter;
+
+
+import java.util.HashSet;
+
+import com.google.gwt.user.client.Window;
+
+import de.unihannover.dbs.mth.client.model.Kompetenzbereich;
+import de.unihannover.dbs.mth.client.model.Lehrveranstaltung;
+import de.unihannover.dbs.mth.client.model.ModkatFactory;
+
+
+public class HistoryTools {
+
+	public static enum Page {
+		interestSelection, recommendations;
+	}
+
+	private static final String PAGE_ARGS_SEPARATOR = "/";
+	private static final String ARG_ASSIGNMENT_OPERATOR = "=";
+	private static final String MULTI_LV_SEPARATOR = "_";
+	private static final String ARG_SEPARATOR = ",";
+
+	public static class NoSuchPageException extends Exception {
+
+		private static final long serialVersionUID = 1L;
+
+	}
+
+	public static PageAndArgs parseHistoryToken(String historyToken)
+			throws NoSuchPageException {
+
+		String[] pageAndArgs = historyToken.split(PAGE_ARGS_SEPARATOR, 2);
+
+		String pageString = pageAndArgs[0];
+
+		Page page = null;
+		try {
+			page = Page.valueOf(pageString);
+		} catch (IllegalArgumentException e) {
+			throw new NoSuchPageException();
+		}
+
+		PageAndArgs result = new PageAndArgs(page);
+
+		if (pageAndArgs.length < 2)
+			return result;
+
+		String argsString = pageAndArgs[1];
+
+		String[] args = argsString.split(ARG_SEPARATOR);
+
+		boolean hadErrors = false;
+
+		for (String argAndValueString : args) {
+			String[] argAndValue = argAndValueString.split(
+					ARG_ASSIGNMENT_OPERATOR, 2);
+			String argName = argAndValue[0];
+			String argValue = argAndValue[1];
+
+			if (PageAndArgs.multiLvArgNames.contains(argName)) {
+				HashSet<Lehrveranstaltung> lvs = parseLvIDs(argValue);
+				result.multiLvArgs.put(argName, lvs);
+			} else {
+				hadErrors = true;
+			}
+		}
+
+		notifyAboutIllegalURLIfNeeded(hadErrors);
+
+		return result;
+	}
+
+
+	static HashSet<String> fillMultiLvArgNames() {
+
+		HashSet<String> result = new HashSet<String>();
+
+		for (PageAndArgs.MultiLvArg arg : PageAndArgs.MultiLvArg.values())
+			result.add(arg.name());
+
+		for (Kompetenzbereich kb : ModkatFactory.get().getAll(
+				Kompetenzbereich.class))
+			result.add(kbToArg(kb));
+
+		return result;
+	}
+
+
+	public static String buildHistoryToken(PageAndArgs pageAndArgs) {
+
+		String result = pageAndArgs.page.name();
+
+		String args = "";
+		for (String argName : pageAndArgs.multiLvArgs.keySet()) {
+
+			String argAssignment = buildArgAssignment(pageAndArgs, argName);
+
+			if (argAssignment.isEmpty())
+				continue;
+
+			if (!args.isEmpty())
+				args += ARG_SEPARATOR;
+
+			args += argAssignment;
+		}
+
+		if (!args.isEmpty())
+			result += PAGE_ARGS_SEPARATOR + args;
+
+		return result;
+	}
+
+
+	private static String buildArgAssignment(PageAndArgs pageAndArgs,
+			String argName) {
+
+		String result = "";
+
+		HashSet<Lehrveranstaltung> lvs = pageAndArgs.multiLvArgs.get(argName);
+
+		if (!lvs.isEmpty()) {
+			result += argName + ARG_ASSIGNMENT_OPERATOR;
+		}
+
+		boolean first = true;
+
+		for (Lehrveranstaltung lv : lvs) {
+			if (!first) {
+				result += MULTI_LV_SEPARATOR;
+			}
+			result += lv.getId();
+			first = false;
+		}
+
+		return result;
+	}
+
+
+	private static HashSet<Lehrveranstaltung> parseLvIDs(String lvIDs) {
+
+		HashSet<Lehrveranstaltung> result = new HashSet<Lehrveranstaltung>();
+
+		if (lvIDs == null)
+			return result;
+
+		boolean hadErrors = false;
+
+		for (String idString : lvIDs.split(MULTI_LV_SEPARATOR)) {
+			try {
+				long id = Long.parseLong(idString);
+				result.add(ModkatFactory.get().get(Lehrveranstaltung.class, id));
+			} catch (NumberFormatException e) {
+				hadErrors = true;
+			}
+		}
+
+		notifyAboutIllegalURLIfNeeded(hadErrors);
+
+		return result;
+	}
+
+
+	static String kbToArg(Kompetenzbereich kb) {
+
+		return "lvsDoneIn" + kb.getKuerzel();
+	}
+
+
+	private static void notifyAboutIllegalURLIfNeeded(boolean hadErrors) {
+
+		if (hadErrors)
+			Window.alert("Das Format der ausgewählten Lehrveranstaltungen in der URL ist ungültig. "
+					+ "Bitte überprüfen Sie die Einträge in der Spalte [Auswahl] und drücken Sie "
+					+ "anschließend [Export] in der Kopfzeile, um eine gültige URL mit den "
+					+ "ausgewählten Lehrveranstaltungen zu erhalten.");
+	}
+}

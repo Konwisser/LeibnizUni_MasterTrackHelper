@@ -1,0 +1,114 @@
+1364191221039	Convert local variable 'lvsInMinOneKkb' to field
+1364191349334	Rename local variable 'kb'
+1364191445350	Rename local variable 'kkbToLvMap'
+1364191457658	Rename method 'createKkbToLvMap'
+1364191919586	Convert local variable 'allKkbWahlen' to field
+1364192008572	Rename method 'getKKBRecommendation'
+1364192020030	Rename method 'getKKBWahlenWithRecommendation'
+1364192032154	Rename field 'allKkbWahlen'
+1364192442251	Convert local variable 'kkbThI' to field
+1364192504754	Convert local variable 'kbToLvMap' to field
+1364193008478	Rename local variable 'kkbToLvMap'
+1364193491819	Rename method 'getLeistungspunkteIn'
+1364193705020	Rename method 'createKbToLpSumMap'
+1364193757663	Extract local variable 'lp'
+1364194216452	Rename method 'getLeistungspunkteSumIn'
+1364194397716	Rename method 'getPrLeistungLpSumIn'
+1364194411744	Rename method 'getStLeistungLpSumIn'
+1364195531787	Extract method 'getLpStLeistungNormed'
+1364195568173	Rename local variable 'lpStLeistung1Normed'
+1364195573316	Rename local variable 'lpStLeistung1'
+1364195695355	Convert anonymous class to nested
+1364196967798	Rename field 'selectedLV'
+1364197314430	Rename field 'table'
+1364197670436	Rename method 'isPossible'
+1364197692657	Rename method 'allKkbMinLpOK'
+1364197707562	Rename method 'isKkbPairPossible'
+1364197725010	Rename method 'isKkbPossible'
+1364197738771	Rename field 'kkbPairPossible'
+1364197747568	Rename field 'kkbPossible'
+1364198033432	Rename local variable 'rankedKkbWahlen'
+1364198356743	Rename method 'getComment'
+1364200260776	Extract method 'checkMinLpOfKkb'
+1364201499315	Rename field 'possibleTable'
+1364201727640	Extract local variable 'kkbThI'
+1364201767855	Rename field 'IG_ID'
+1364201810724	Rename field 'Bpr_ID'
+1364202365985	Extract local variable 'w'
+1364203178501	Convert local variable 'kkbThI' to field
+1364203185303	Convert local variable 'kbIG' to field
+1364203195658	Convert local variable 'kbBPr' to field
+1364203333040	Extract local variable 'kkbWahlen'
+1364204924054	Rename field 'lpInTwoKkb'
+1364206305869	Extract local variable 'kombiKey'
+1364208504398	Rename local variable 'rowIndex'
+1364208510967	Rename local variable 'colIndex'
+1364208650020	Convert anonymous class to nested
+1364220135573	Move compilation unit
+1364220559925	Delete element
+1364220569218	Move compilation unit
+1364220579219	Rename compilation unit 'MTHHistory.java'
+1364220668625	Convert local variable 'interestTable' to field
+1364221214765	Rename local variable 'showRecommendation'
+1364292720812	Rename method 'setFooter'
+1364297916528	Rename method 'parse'
+1364297926375	Rename type 'Formatter'
+1364301192043	Rename local variable 'message'
+1364306889383	Convert local variable 'kkbThI' to field
+1364307063249	Delete elements
+1364307694491	Rename method 'createKbToLvMap'
+1364307720431	Rename field 'kbToPrLeistungLpSumMap'
+1364307725602	Rename field 'kbToStLeistungLpSumMap'
+1364307890500	Extract method 'fillDataAndCalc'
+1364308413275	Rename type 'ShowRecommendationPanel'
+1364308435728	Copy compilation unit
+1364308513015	Rename local variable 'btnShowRecommendations'
+1364308573202	Rename method 'btnShowRecommendationsClicked'
+1364308583478	Rename type 'Presenter'
+1364308601881	Rename type 'Presenter'
+1364308748530	Rename method 'setFooter'
+1364308858548	Rename enum constant 'showModkat'
+1364309436275	Delete element
+1364309444247	Delete element
+1364309480982	Delete element
+1364309497089	Copy compilation unit
+1364309518000	Rename local variable 'interestSelectionTable'
+1364309606135	Rename local variable 'btnShowRecommendations'
+1364309629361	Rename type 'IntSelPagePresenter'
+1364309702821	Convert local variable 'interestSelectionTable' to field
+1364309814551	Rename field 'interestTable'
+1364309995689	Rename method 'setBody'
+1364310013094	Rename method 'setPage'
+1364310344417	Rename local variable 'recTable'
+1364310443219	Rename local variable 'recPage'
+1364310452293	Convert local variable 'recommendationPage' to field
+1364311923686	Rename method 'btnShowRecommendationClicked'
+1364316678201	Delete element
+1364316914403	Extract local variable 'kkbThI'
+1364317431720	Rename local variable 'commentHtmlString'
+1364317722775	Rename method 'analyzeRegularities'
+1364317733762	Rename method 'analyzeRegularitiesForEachKkb'
+1364317745270	Rename method 'analyzeRegularitiesForEachKkbPair'
+1364318256179	Extract method 'isMinLpOK'
+1364318423918	Rename method 'getLpSumIn'
+1364318438697	Rename method 'getSharedLpSumOf'
+1364318448596	Rename method 'getLpIn'
+1364318456838	Rename method 'getSharedLpIn'
+1364319008845	Rename type 'ThIKombi'
+1364319418386	Rename type 'Query'
+1364320551351	Rename method 'getSharedLpSumOf'
+1364322958340	Rename method 'addToMap'
+1364323442150	Rename method 'calcAndFillData'
+1364323746862	Extract method 'addChkBox'
+1364323800666	Rename method 'addChkBox'
+1364324575010	Extract local variable 'kb2'
+1364325941882	Extract local variable 'headers'
+1364328710007	Rename local variable 'o1'
+1364340554438	Extract local variable 'normedLpSum'
+1364383972615	Extract method 'getKkbs'
+1364384061873	Extract method 'getComment'
+1364386537741	Extract local variable 'result'
+1364387365935	Rename local variable 'i'
+1364387451950	Extract local variable 'text'
+1364387461583	Extract local variable 'title'
+1364485633782	Delete element

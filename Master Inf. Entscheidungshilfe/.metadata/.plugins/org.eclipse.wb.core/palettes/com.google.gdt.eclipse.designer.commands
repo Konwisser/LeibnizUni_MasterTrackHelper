@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<commands>
+	<addCategory
+		id="category_1363953113031"
+		name="Custom"
+		description="Container for custom components"
+		visible="true"
+		open="true"/>
+	<addComponent
+		id="custom_1363953113031"
+		name="InterestSelectionTable"
+		description="Creates de.unihannover.dbs.mth.client.gui.InterestSelectionTable component."
+		visible="true"
+		class="de.unihannover.dbs.mth.client.gui.InterestSelectionTable"
+		category="category_1363953113031"/>
+	<addComponent
+		id="custom_1364309126772"
+		name="InterestSelectionTable"
+		description="Creates de.unihannover.dbs.mth.client.view.InterestSelectionTable component."
+		visible="true"
+		class="de.unihannover.dbs.mth.client.view.InterestSelectionTable"
+		category="category_1363953113031"/>
+</commands>

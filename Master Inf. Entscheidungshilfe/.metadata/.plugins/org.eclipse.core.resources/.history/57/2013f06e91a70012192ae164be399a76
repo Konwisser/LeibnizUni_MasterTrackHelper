@@ -1,0 +1,155 @@
+package de.unihannover.dbs.mth.client.model;
+
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import com.sun.tools.internal.xjc.model.Constructor;
+
+import java_cup.internal_error;
+
+import de.unihannover.dbs.mth.client.logic.ModkatParser;
+
+
+public class ModkatFactory {
+
+	public static interface ModkatEntity {
+		// just for tagging
+	}
+
+	public static enum SemAngArt {
+		NUR_PRUEFUNG("Nur Prüfung"), LEHRVERANSTALTUNG_UND_PRUEFUNG(
+				"Veranstaltung und Prüfung");
+
+		private String humanFriendlyName;
+
+
+		private SemAngArt(String readableName) {
+
+			this.humanFriendlyName = readableName;
+		}
+
+
+		@Override
+		public String toString() {
+
+			return humanFriendlyName;
+		}
+	}
+
+	public static enum Niveau {
+		GRUNDLAGEN, WEITERFUEHREND;
+	}
+
+	public static enum Leistung {
+		STUDIENLEISTUNG("Studienleistung"), PRUEFUNGSLEISTUNG(
+				"Prüfungsleistung");
+
+		private String humanFriendlyName;
+
+
+		private Leistung(String readableName) {
+
+			this.humanFriendlyName = readableName;
+		}
+
+
+		@Override
+		public String toString() {
+
+			return humanFriendlyName;
+		}
+	}
+
+	public static enum SemesterZeit {
+		SOMMER("Sommer"), WINTER("Winter");
+
+		private String humanFriendlyName;
+
+
+		private SemesterZeit(String readableName) {
+
+			this.humanFriendlyName = readableName;
+		}
+
+
+		@Override
+		public String toString() {
+
+			return humanFriendlyName;
+		}
+	}
+
+	public static final int MIN_KKB_IG_BPr_STLEISTUNG_LP = 18;
+	public static final int MAX_KKB_IG_BPr_STLEISTUNG_LP = 31;
+
+	public static final int MIN_KKB_IG_BPr_LP = 72;
+	public static final int MAX_KKB_IG_BPr_LP = 78;
+
+	private static ModkatFactory instance;
+
+	private HashMap<Class<? extends ModkatEntity>, HashMap<Long, ModkatEntity>> entities;
+
+
+	private ModkatFactory() {
+
+		entities = new HashMap<Class<? extends ModkatEntity>, HashMap<Long, ModkatEntity>>();
+		entities.put(Kompetenzbereich.class, new HashMap<Long, ModkatFactory.ModkatEntity>());
+		// TODO
+	}
+
+
+	public static ModkatFactory get() {
+
+		if (instance == null)
+			instance = new ModkatFactory();
+		return instance;
+	}
+
+
+	public <T extends ModkatEntity> T get(Class<T> type, long id) {
+
+		T result = (T) entities.get(type).get(id);
+
+		if (result == null) {
+			java.lang.reflect.Constructor<T> constructor;
+			try {
+				constructor = type.getConstructor(Long.class);
+				result = constructor.newInstance(id);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			entities.get(type).put(id, result);
+		}
+
+		return result;
+	}
+
+
+	public <T extends ModkatEntity> Collection<T> getAll(Class<T> type) {
+
+		return (Collection<T>) entities.get(type).values();
+	}
+
+
+	public List<Kompetenzbereich> getWahlpflichtKKBs() {
+
+		List<Kompetenzbereich> wahlpflichtKKBs = new ArrayList<Kompetenzbereich>();
+
+		Kompetenzbereich kkbThI = getKompetenzbereich(Kompetenzbereich.KKB_ThI_ID);
+
+		for (Kompetenzbereich kb : ModkatFactory.get()
+				.getAllKompetenzbereiche())
+			if (kb.isKkb() && kb != kkbThI)
+				wahlpflichtKKBs.add(kb);
+
+		return wahlpflichtKKBs;
+	}
+}

@@ -1,0 +1,289 @@
+package de.unihannover.dbs.mth.client.logic;
+
+
+import java.util.Collection;
+import java.util.Iterator;
+import de.unihannover.dbs.mth.client.model.Kompetenzbereich;
+import de.unihannover.dbs.mth.client.model.Lehrveranstaltung;
+import de.unihannover.dbs.mth.client.model.ModkatFactory;
+import de.unihannover.dbs.mth.client.model.Modul;
+import de.unihannover.dbs.mth.client.model.PruefbareEinheit;
+import de.unihannover.dbs.mth.client.model.Pruefung;
+import de.unihannover.dbs.mth.client.model.Semester;
+import de.unihannover.dbs.mth.client.model.Semesterangebot;
+import de.unihannover.dbs.mth.client.model.ModkatFactory.Leistung;
+import de.unihannover.dbs.mth.client.model.ModkatFactory.SemAngArt;
+import de.unihannover.dbs.mth.client.model.ModkatFactory.SemesterZeit;
+
+
+public class ModkatParser {
+
+	private static class LineIterator implements Iterator<String> {
+
+		private String[] lineParts;
+		private int index = 0;
+
+
+		public LineIterator(String line) {
+
+			line = "\"|" + line + "|\"";
+
+			/*
+			 * unfortunately "|" is regarded as "OR" in a delimiter pattern,
+			 * thus it has to be replaced
+			 */
+			line = line.replace("\"|\"", ";;;");
+
+			// for debug reasons
+			// System.out.println("current line:");
+			// System.out.println(line);
+
+			/*
+			 * the "-1" as limit ensures trailing empty parts to be included in
+			 * order to keep the same number of parts for each line
+			 */
+			lineParts = line.split(";;;", -1);
+		}
+
+
+		@Override
+		public boolean hasNext() {
+
+			return index < lineParts.length - 1;
+		}
+
+
+		@Override
+		public String next() {
+
+			index++;
+			String nextPart = lineParts[index]; // for debug reasons
+			// System.out.println(index + ": " + nextPart);
+			return nextPart;
+		}
+
+
+		@Override
+		public void remove() {
+
+			// not needed
+		}
+	}
+
+
+	private static void readParts(LineIterator parts) {
+
+		/*
+		 * z.B. bei leeren Zeilen am Ende
+		 */
+		if (!parts.hasNext())
+			return;
+
+		Semesterangebot semesterangebot = readSemesterangebot(parts);
+		Semester semester = readSemester(parts);
+		Lehrveranstaltung lv = readLehrveranstaltung(parts);
+		Kompetenzbereich kb = readKompetenzbereich(parts);
+		Pruefung pruefung = readPruefung(parts);
+		Modul modul = readModul(parts);
+		PruefbareEinheit pruefbareEinheit = readPruefbareEinheit(parts);
+
+		if (pruefbareEinheit != null) {
+			pruefbareEinheit.getLehrveranstaltungen().add(lv);
+			lv.getPruefbareEinheiten().add(pruefbareEinheit);
+		}
+
+		if (pruefbareEinheit != null && pruefung != null) {
+			pruefung.setPruefbareEinheit(pruefbareEinheit);
+			pruefbareEinheit.getPruefungen().add(pruefung);
+		}
+
+		lv.getSemesterangebote().add(semesterangebot);
+		semesterangebot.setLehrveranstaltung(lv);
+
+		semesterangebot.setSemester(semester);
+		semester.getAngebote().add(semesterangebot);
+	}
+
+
+	/**
+	 * 
+	 * @param parts
+	 * @return entsprechende prüfbare Einheit oder <code>null</code>, falls die
+	 *         Leistungspunkte nicht eingetragen sind
+	 */
+	private static PruefbareEinheit readPruefbareEinheit(LineIterator parts) {
+
+		long id = Long.parseLong(parts.next());
+		PruefbareEinheit pEinheit = ModkatFactory.get().get(
+				PruefbareEinheit.class, id);
+
+		pEinheit.setPruefungsArten(parts.next());
+		String lpString = parts.next();
+		if (lpString.isEmpty()) {
+			parts.next(); // benotet
+			parts.next(); // Bemerkung
+			return null;
+		}
+		pEinheit.setLeistungsPunkte(Integer.parseInt(lpString));
+		pEinheit.setBenotet(parts.next().equals("b"));
+		pEinheit.setBemerkung(parts.next());
+
+		return pEinheit;
+	}
+
+
+	/**
+	 * 
+	 * @param parts
+	 * @return zugehörige Prüfung oder <code>null</code>, falls PNr nicht
+	 *         eingetragen
+	 */
+	private static Pruefung readPruefung(LineIterator parts) {
+
+		String pNrString = parts.next();
+		if (pNrString.isEmpty()) {
+			for (int i = 1; i <= 5; i++)
+				parts.next();
+			return null;
+		}
+
+		long pNr = Long.parseLong(pNrString);
+		Pruefung pruefung = ModkatFactory.get().get(Pruefung.class, pNr);
+
+		/*
+		 * TODO: WEITERF ist von Prof. Lipeck auf dem ER-Diagramm hier
+		 * gestrichen worden - wo soll man es aber sonst her bekommen und zu
+		 * welcher Entity gehört es?
+		 */
+		parts.next(); // weiterfuehrend
+		// System.out.println(String.format("Pnr: %d, weiterführend: %s", pNr,
+		// weiterfuehrend));
+
+		if (parts.next().equals("s"))
+			pruefung.setLeistung(Leistung.STUDIENLEISTUNG);
+		else
+			pruefung.setLeistung(Leistung.PRUEFUNGSLEISTUNG);
+		pruefung.setWahlmerkmal(parts.next());
+		pruefung.setBemerkung(parts.next());
+
+		return pruefung;
+	}
+
+
+	private static Kompetenzbereich readKompetenzbereich(LineIterator parts) {
+
+		long kbID = Long.parseLong(parts.next());
+		Kompetenzbereich kb = ModkatFactory.get().get(Kompetenzbereich.class,
+				kbID);
+
+		kb.setKuerzel(parts.next());
+		kb.setName(parts.next());
+		kb.setEnglishName(parts.next());
+		kb.setMinLP(Integer.parseInt(parts.next()));
+		kb.setMaxLP(Integer.parseInt(parts.next()));
+		kb.setWahlmerkmal(parts.next());
+
+		return kb;
+	}
+
+
+	private static Lehrveranstaltung readLehrveranstaltung(LineIterator parts) {
+
+		long lvID = Long.parseLong(parts.next());
+		Lehrveranstaltung lv = ModkatFactory.get().get(Lehrveranstaltung.class,
+				lvID);
+
+		lv.setTitel(parts.next());
+		lv.setEnglishTitle(parts.next());
+		lv.setFrequenz(parts.next());
+		lv.setFrequenzSemester(parts.next());
+		lv.setBemerkung(parts.next());
+
+		long gueltigVonID = Long.parseLong(parts.next());
+		long gueltigBisID = Long.parseLong(parts.next());
+		lv.setGueltigVon(ModkatFactory.get().get(Semester.class, gueltigVonID));
+		lv.setGueltigBis(ModkatFactory.get().get(Semester.class, gueltigBisID));
+
+		lv.setAnsprechpartner(parts.next());
+
+		return lv;
+	}
+
+
+	private static Semester readSemester(LineIterator parts) {
+
+		long semID = Long.parseLong(parts.next());
+		Semester semester = ModkatFactory.get().get(Semester.class, semID);
+
+		semester.setJahr(Integer.parseInt(parts.next()));
+		if (parts.next().equals("s"))
+			semester.setJahreszeit(SemesterZeit.SOMMER);
+		else
+			semester.setJahreszeit(SemesterZeit.WINTER);
+
+		return semester;
+	}
+
+
+	private static Semesterangebot readSemesterangebot(LineIterator parts) {
+
+		long sID = Long.parseLong(parts.next());
+		Semesterangebot semesterangebot = ModkatFactory.get().get(
+				Semesterangebot.class, sID);
+
+		semesterangebot.setPruefungsArt(parts.next());
+		semesterangebot.setBonus(parts.next());
+		semesterangebot.setLink(parts.next());
+		semesterangebot.setVorkenntnisse(parts.next());
+		semesterangebot.setLernziele(parts.next());
+		semesterangebot.setLiteratur(parts.next());
+		semesterangebot.setStoffplan(parts.next());
+		semesterangebot.setBemerkung(parts.next());
+		semesterangebot.setBesonderheiten(parts.next());
+		if (parts.next().equals("j"))
+			semesterangebot.setArt(SemAngArt.LEHRVERANSTALTUNG_UND_PRUEFUNG);
+		else
+			semesterangebot.setArt(SemAngArt.NUR_PRUEFUNG);
+		semesterangebot.setSemesterthema(parts.next());
+		semesterangebot.setSprache(parts.next());
+		semesterangebot.setDozenten(parts.next());
+		semesterangebot.setPruefer(parts.next());
+		semesterangebot.setBetreuer(parts.next());
+
+		return semesterangebot;
+	}
+
+
+	private static Modul readModul(LineIterator parts) {
+
+		long id = Long.parseLong(parts.next());
+		Modul modul = ModkatFactory.get().get(Modul.class, id);
+		
+		modul.setName(parts.next());
+		modul.setEnglishName(parts.next());
+		
+		return modul;
+	}
+
+
+	public static void parseCSV(Collection<String> csvLines) {
+
+		int errors = 0;
+
+		for (String line : csvLines) {
+			try {
+				readParts(new LineIterator(line));
+			} catch (Exception e) {
+				errors++;
+				System.err.println("Error No " + errors + ":");
+				e.printStackTrace();
+			}
+		}
+
+		if (errors == 0)
+			System.out.println("finished parsing without errors");
+		else
+			System.err.println("ERRORS: finished parsing with " + errors
+					+ " errors!");
+	}
+}

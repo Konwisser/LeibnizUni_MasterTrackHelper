@@ -1,0 +1,81 @@
+package de.unihannover.dbs.mth.client.gui;
+
+import java.beans.Beans;
+
+import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.DisclosurePanel;
+import com.google.gwt.user.client.ui.Label;
+
+import de.unihannover.dbs.mth.client.modkat.Lehrveranstaltung;
+import de.unihannover.dbs.mth.client.modkat.Modkat.SemesterZeit;
+
+import com.google.gwt.user.client.ui.VerticalPanel;
+import com.google.gwt.user.client.ui.FlexTable;
+import com.google.gwt.user.client.ui.InlineLabel;
+import com.google.gwt.user.client.ui.HasVerticalAlignment;
+
+class LehrveranstaltungCell extends Composite {
+	private Label lblFrequenzContent;
+	private DisclosurePanel disclosurePanel;
+	private Label lblBemerkungContent;
+
+	public LehrveranstaltungCell(Lehrveranstaltung lv) {
+		buildGUI();
+
+		if (!Beans.isDesignTime())
+			fillData(lv);
+	}
+
+	private void buildGUI() {
+		disclosurePanel = new DisclosurePanel(
+				"[Deutscher Titel der LV / Englischer Titel der LV]");
+		disclosurePanel.setOpen(true);
+		disclosurePanel.setAnimationEnabled(true);
+		initWidget(disclosurePanel);
+//		disclosurePanel.setSize("884px", "25px");
+		disclosurePanel.setSize("100%", "25px");
+
+		VerticalPanel verticalPanel = new VerticalPanel();
+		disclosurePanel.setContent(verticalPanel);
+		verticalPanel.setSize("100%", "10px");
+
+		FlexTable lvDetailsTable = new FlexTable();
+		verticalPanel.add(lvDetailsTable);
+		lvDetailsTable.setWidth("100%");
+
+		Label lblFrequenz = new Label("Frequenz:");
+		lblFrequenz.setStyleName("definingLabel");
+		lvDetailsTable.setWidget(0, 0, lblFrequenz);
+		lblFrequenz.setWidth("0px");
+
+		lblFrequenzContent = new Label("[jedes Jahr, Winter]");
+		lvDetailsTable.setWidget(0, 1, lblFrequenzContent);
+
+		Label lblBemerkung = new Label("Bemerkung:");
+		lblBemerkung.setStyleName("definingLabel");
+		lvDetailsTable.setWidget(1, 0, lblBemerkung);
+		lblBemerkung.setWidth("0px");
+
+		lblBemerkungContent = new Label(
+				"[Bemerkung der Lehrveranstaltung]");
+		lvDetailsTable.setWidget(1, 1, lblBemerkungContent);
+		
+		lvDetailsTable.getCellFormatter().setVerticalAlignment(1, 0, HasVerticalAlignment.ALIGN_TOP);
+		lvDetailsTable.getCellFormatter().setVerticalAlignment(0, 0, HasVerticalAlignment.ALIGN_TOP);
+	}
+
+	private void fillData(Lehrveranstaltung lv) {
+		String headerText;
+		if (lv.getTitel().equals(lv.getEnglishTitle()))
+			headerText = lv.getTitel();
+		else
+			headerText = lv.getTitel() + " / " + lv.getEnglishTitle();
+		disclosurePanel.getHeaderTextAccessor().setText(headerText);
+
+		lblFrequenzContent.setText(lv.getFrequenz() + ", "
+				+ lv.getFrequenzSemester());
+
+		lblBemerkungContent.setText(lv.getBemerkung());
+	}
+
+}

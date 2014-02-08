@@ -1,0 +1,254 @@
+package de.unihannover.dbs.mth.client.view;
+
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.RepeatingCommand;
+import com.google.gwt.event.dom.client.ChangeEvent;
+import com.google.gwt.event.dom.client.ChangeHandler;
+import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.FlexTable;
+import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.HTMLTable;
+import com.google.gwt.user.client.ui.HasAlignment;
+import com.google.gwt.user.client.ui.ListBox;
+import com.google.gwt.user.client.ui.Widget;
+
+import de.unihannover.dbs.mth.client.model.Kompetenzbereich;
+import de.unihannover.dbs.mth.client.model.Lehrveranstaltung;
+import de.unihannover.dbs.mth.client.model.ModkatFactory;
+import de.unihannover.dbs.mth.client.model.Lehrveranstaltung.NoPruefbareEinheitException;
+
+import com.google.gwt.user.client.ui.HasHorizontalAlignment;
+
+
+public class LvSelectionTable extends Composite {
+
+	public static interface InterestSelTablePresenter {
+
+		public void finishedTableBuilding();
+
+
+		public void selectionChanged(Lehrveranstaltung lv, String selection);
+
+
+		public List<String> getSelectionOptions(Lehrveranstaltung lv);
+
+
+		public int getSelectedIndex(Lehrveranstaltung lv);
+	}
+
+	private class LvComboBoxChangeHandler implements ChangeHandler {
+
+		private Lehrveranstaltung lv;
+
+
+		public LvComboBoxChangeHandler(Lehrveranstaltung lv) {
+
+			this.lv = lv;
+		}
+
+
+		@Override
+		public void onChange(ChangeEvent event) {
+
+			ListBox listBox = (ListBox) event.getSource();
+			int selIndex = listBox.getSelectedIndex();
+			String selection = listBox.getItemText(selIndex);
+
+			presenter.selectionChanged(lv, selection);
+		}
+	}
+
+	private FlexTable table;
+
+	private HashMap<Lehrveranstaltung, ListBox> lvToComboBox;
+	private HashMap<Lehrveranstaltung, HTML> lvToLp;
+	private HashMap<Lehrveranstaltung, HTML> lvToKb;
+	private HashMap<Lehrveranstaltung, LvCell> lvToLvCell;
+
+	private InterestSelTablePresenter presenter;
+
+
+	public LvSelectionTable(InterestSelTablePresenter presenter) {
+
+		this.presenter = presenter;
+
+		lvToComboBox = new HashMap<Lehrveranstaltung, ListBox>();
+		lvToLp = new HashMap<Lehrveranstaltung, HTML>();
+		lvToKb = new HashMap<Lehrveranstaltung, HTML>();
+		lvToLvCell = new HashMap<Lehrveranstaltung, LvCell>();
+
+		buildTable();
+
+		initWidget(table);
+	}
+
+
+	public void fillTable(final List<Lehrveranstaltung> lehrveranstaltungen) {
+
+		deleteAllRows();
+
+		RepeatingCommand buildRows = new RepeatingCommand() {
+
+			private int index = 0;
+
+			private HTMLTable.RowFormatter rf = table.getRowFormatter();
+
+			private String statusBeforeRowBuilding = View.get().getStatusText();
+
+
+			@Override
+			public boolean execute() {
+
+				if (index == lehrveranstaltungen.size()) {
+					presenter.finishedTableBuilding();
+					return false;
+				}
+
+				View.get().setStatusText(
+						statusBeforeRowBuilding + " (" + index + " / "
+								+ lehrveranstaltungen.size() + ")");
+
+				Lehrveranstaltung lv = lehrveranstaltungen.get(index);
+
+				ArrayList<Widget> rowContent = new ArrayList<Widget>(4);
+
+				rowContent.add(createSelectionBox(lv));
+				rowContent.add(getKb(lv));
+				rowContent.add(getLp(lv));
+				rowContent.add(new LvCell(lv));
+
+				int rowIndex = index + 1;
+
+				for (int col = 0; col < rowContent.size(); col++)
+					table.setWidget(rowIndex, col, rowContent.get(col));
+
+				table.getCellFormatter().setHorizontalAlignment(rowIndex, 0,
+						HasHorizontalAlignment.ALIGN_CENTER);
+
+				table.getCellFormatter().setHorizontalAlignment(rowIndex, 2,
+						HasHorizontalAlignment.ALIGN_RIGHT);
+
+				for (int col = 0; col < rowContent.size(); col++)
+					table.getCellFormatter().setVerticalAlignment(rowIndex,
+							col, HasAlignment.ALIGN_TOP);
+
+				if ((rowIndex % 2) != 0)
+					rf.addStyleName(rowIndex, "FlexTable-OddRow");
+				else
+					rf.addStyleName(rowIndex, "FlexTable-EvenRow");
+
+				index++;
+				return true;
+			}
+
+
+			private Widget getLp(Lehrveranstaltung lv) {
+
+				HTML result = lvToLp.get(lv);
+				if (result != null)
+					return result;
+				
+				String lp = null;
+				try {
+					lp = lv.getLeistungspunkte() + "";
+				} catch (NoPruefbareEinheitException e) {
+					lp = "";
+				}
+
+				result = new HTML(lp);
+				return result;
+			}
+
+
+			private HTML getKb(Lehrveranstaltung lv) {
+
+				HTML html = lvToKb.get(lv);
+				if (html != null)
+					return html;
+				
+				String result = "";
+
+				Set<Kompetenzbereich> kbs = lv.getKompetenzbereiche();
+				ArrayList<Kompetenzbereich> kbsList;
+				kbsList = new ArrayList<Kompetenzbereich>(kbs);
+				Collections.sort(kbsList);
+
+				for (Kompetenzbereich kb : kbsList) {
+					if (!result.isEmpty())
+						result += "<br>";
+					result += kb.getKuerzel();
+				}
+
+				html = new HTML(result, true);
+
+				return html;
+			}
+
+
+			private ListBox createSelectionBox(Lehrveranstaltung lv) {
+
+				ListBox cmbBox = lvToComboBox.get(lv);
+
+				if (cmbBox != null)
+					return cmbBox;
+
+				cmbBox = new ListBox();
+
+				cmbBox.setVisibleItemCount(1);
+				cmbBox.setWidth("100%");
+
+				for (String selOption : presenter.getSelectionOptions(lv))
+					cmbBox.addItem(selOption);
+
+				cmbBox.setSelectedIndex(presenter.getSelectedIndex(lv));
+
+				if (lv.getId() == Lehrveranstaltung.LV_MASTER_THESIS_ID)
+					cmbBox.setEnabled(false);
+				else
+					cmbBox.addChangeHandler(new LvComboBoxChangeHandler(lv));
+
+				lvToComboBox.put(lv, cmbBox);
+
+				return cmbBox;
+			}
+		};
+
+		Scheduler.get().scheduleIncremental(buildRows);
+	}
+
+
+	private void buildTable() {
+
+		table = new FlexTable();
+		table.setStyleName("table");
+		table.setCellPadding(6);
+		table.setWidth("100%");
+		buildTableHeader();
+	}
+
+
+	private void buildTableHeader() {
+
+		String[] headers = new String[] { "Auswahl", "KB", "LP",
+				"Lehrveranstaltung" };
+		for (int col = 0; col < headers.length; col++)
+			table.setText(0, col, headers[col]);
+
+		table.getRowFormatter().addStyleName(0, "tableHeader");
+	}
+
+
+	public void deleteAllRows() {
+
+		table.clear(true);
+		buildTableHeader();
+	}
+}

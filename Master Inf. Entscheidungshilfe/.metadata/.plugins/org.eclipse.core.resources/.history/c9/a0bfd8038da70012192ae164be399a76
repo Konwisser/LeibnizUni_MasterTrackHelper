@@ -1,0 +1,189 @@
+package de.unihannover.dbs.mth.client.model;
+
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+
+public class Kompetenzbereich implements Comparable<Kompetenzbereich> {
+
+	/**
+	 * ID des Kernkompetenzbereiches Theoretische Informatik (KKB_ThI)
+	 */
+	public static final int KKB_ThI_ID = 23;
+
+	/**
+	 * ID des Kompetenzbereiches Informatik--Grundlagen (IG)
+	 */
+	public static final int KB_IG_ID = 4;
+
+	/**
+	 * ID des Kompetenzbereiches Informatik--Betriebspraktikum (BPr);
+	 */
+	public static final int KB_BPr_ID = 22;
+
+	/**
+	 * ID des Kompetenzbereiches Nebenfach (NF)
+	 */
+	public static final int KB_NF_ID = 8;
+
+	/**
+	 * ID des Kompetenzbereiches Masterarbeit (MA)
+	 */
+	public static final int KB_MA = 29;
+
+	private static final List<Integer> kbOrder = Arrays.asList(KB_IG_ID,
+			KB_BPr_ID, KB_NF_ID, KB_MA);
+
+	private final long id;
+
+	private String name;
+
+	private String englishName;
+
+	private String kuerzel;
+
+	/**
+	 * minimale Anzahl an Leistungspunkten für diesen Kompetenzbereich
+	 */
+	private int minLP;
+
+	/**
+	 * minimale Anzahl an Leistungspunkten für diesen Kompetenzbereich
+	 */
+	private int maxLP;
+
+	private String wahlmerkmal;
+
+	/**
+	 * Module, die in diesen Kompetenzbereich fallen
+	 */
+	private Set<Modul> moudle;
+
+	Kompetenzbereich(long id) {
+
+		this.id = id;
+
+		this.module = new HashSet<Modul>();
+	}
+	
+	public String getName() {
+
+		return name;
+	}
+
+
+	public void setName(String name) {
+
+		this.name = name;
+	}
+
+
+	public String getEnglishName() {
+
+		return englishName;
+	}
+
+
+	public void setEnglishName(String englishName) {
+
+		this.englishName = englishName;
+	}
+
+
+	public int getMinLP() {
+
+		return minLP;
+	}
+
+
+	public void setMinLP(int minLP) {
+
+		this.minLP = minLP;
+	}
+
+
+	public int getMaxLP() {
+
+		return maxLP;
+	}
+
+
+	public void setMaxLP(int maxLP) {
+
+		this.maxLP = maxLP;
+	}
+
+
+	public String getWahlmerkmal() {
+
+		return wahlmerkmal;
+	}
+
+
+	public void setWahlmerkmal(String wahlmerkmal) {
+
+		this.wahlmerkmal = wahlmerkmal;
+	}
+
+
+	public long getId() {
+
+		return id;
+	}
+
+
+	public Set<PruefbareEinheit> getPruefbareEinheiten() {
+
+		return pruefbareEinheiten;
+	}
+
+
+	public String getKuerzel() {
+
+		return kuerzel;
+	}
+
+
+	public void setKuerzel(String kuerzel) {
+
+		this.kuerzel = kuerzel;
+	}
+
+
+	public boolean isKkb() {
+
+		return kuerzel.startsWith("KKB_");
+	}
+
+
+	@Override
+	public String toString() {
+
+		return getKuerzel();
+	}
+
+
+	@Override
+	public int compareTo(Kompetenzbereich o) {
+
+		if (this.isKkb() && !o.isKkb())
+			return -1;
+
+		if (!this.isKkb() && o.isKkb())
+			return 1;
+
+		if (this.isKkb() && o.isKkb())
+			return this.name.compareTo(o.name);
+		
+		int kbOrder1 = kbOrder.indexOf(this.id);
+		int kbOrder2 = kbOrder.indexOf(o.id);
+		
+		if (kbOrder1 == kbOrder2)
+			return this.name.compareTo(o.name);
+		else
+			return kbOrder1 - kbOrder2;
+	}
+}

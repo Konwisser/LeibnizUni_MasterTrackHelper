@@ -1,0 +1,103 @@
+package de.unihannover.dbs.mth.client.model;
+
+
+import java.util.Set;
+
+import de.unihannover.dbs.mth.client.model.ModkatFactory.Leistung;
+
+
+public class Pruefung {
+
+	/**
+	 * die definierende Prüfungsnummer
+	 */
+	private final long nr;
+
+	/**
+	 * Studienleistung oder Prüfungsleistung
+	 */
+	private Leistung leistung;
+
+	/**
+	 * Die prüfbare Einheit, zu der diese Prüfung gehört
+	 */
+	private PruefbareEinheit pruefbareEinheit;
+
+	private String wahhlmerkmal;
+
+	private String bemerkung;
+
+	private Set<Modul> module;
+
+
+	Pruefung(long nr) {
+
+		this.nr = nr;
+	}
+
+
+	public Leistung getLeistung() {
+
+		return leistung;
+	}
+
+
+	public void setLeistung(Leistung leistung) {
+
+		this.leistung = leistung;
+	}
+
+
+	public PruefbareEinheit getPruefbareEinheit() {
+
+		return pruefbareEinheit;
+	}
+
+
+	public void setPruefbareEinheit(PruefbareEinheit pruefbareEinheit) {
+
+		this.pruefbareEinheit = pruefbareEinheit;
+	}
+
+
+	public long getNr() {
+
+		return nr;
+	}
+
+
+	public String getWahhlmerkmal() {
+
+		return wahhlmerkmal;
+	}
+
+
+	public void setWahlmerkmal(String wahlmerkmal) {
+
+		this.wahhlmerkmal = wahlmerkmal;
+	}
+
+
+	public String getBemerkung() {
+
+		return bemerkung;
+	}
+
+
+	public void setBemerkung(String bemerkung) {
+
+		this.bemerkung = bemerkung;
+	}
+
+
+	public Set<Modul> getModule() {
+
+		return module;
+	}
+
+
+	public void setModule(Set<Modul> module) {
+
+		this.module = module;
+	}
+}

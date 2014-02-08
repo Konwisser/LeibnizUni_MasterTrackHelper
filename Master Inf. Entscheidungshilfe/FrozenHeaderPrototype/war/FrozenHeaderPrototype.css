@@ -1,0 +1,15 @@
+.tableHeader {
+	color: white;
+	font-size: 18px;
+	font-weight: normal;
+	letter-spacing: 1px;
+	text-align: center;
+	background-color: #2062B8;
+}
+
+.table {
+	margin-bottom: 6px;
+	padding: 2px;
+	border: 1px solid silver;
+	text-align: center;
+}

@@ -1,0 +1,75 @@
+package de.unihannover.dbs.mth.client.gui;
+
+import java.beans.Beans;
+
+import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.DisclosurePanel;
+import com.google.gwt.user.client.ui.Label;
+
+import de.unihannover.dbs.mth.client.modkat.Lehrveranstaltung;
+import de.unihannover.dbs.mth.client.modkat.Modkat.SemesterZeit;
+
+import com.google.gwt.user.client.ui.VerticalPanel;
+import com.google.gwt.user.client.ui.FlexTable;
+import com.google.gwt.user.client.ui.InlineLabel;
+
+public class LehrveranstaltungCell extends Composite {
+	private Label lblFrequenzContent;
+	private DisclosurePanel disclosurePanel;
+
+	public LehrveranstaltungCell(Lehrveranstaltung lv) {
+		buildGUI();
+
+//		if (Beans.isDesignTime())
+//			lv = getTestLV();
+
+//		fillData(lv);
+	}
+
+	private Lehrveranstaltung getTestLV() {
+		Lehrveranstaltung lv = new Lehrveranstaltung(1);
+		lv.setTitel("[Deutscher Titel der Lehrveranstaltung 1]");
+		lv.setEnglishTitle("[Englischer Titel der Lehrveranstaltung 1]");
+		lv.setFrequenz("[z.B. alle 2 Jahre]");
+		lv.setFrequenzSem(SemesterZeit.SOMMER);
+		lv.setAnsprechpartner("[Ansprechpartner der Lehrveranstaltung 1]");
+		return lv;
+	}
+
+	private void buildGUI() {
+		disclosurePanel = new DisclosurePanel();
+		disclosurePanel.setOpen(true);
+		disclosurePanel.setAnimationEnabled(true);
+		initWidget(disclosurePanel);
+		disclosurePanel.setSize("884px", "25px");
+
+		VerticalPanel verticalPanel = new VerticalPanel();
+		disclosurePanel.setContent(verticalPanel);
+		verticalPanel.setSize("883px", "4cm");
+
+		FlexTable flexTable = new FlexTable();
+		verticalPanel.add(flexTable);
+
+		Label lblFrequenz = new Label("Frequenz:");
+		flexTable.setWidget(0, 0, lblFrequenz);
+
+		lblFrequenzContent = new Label("[jedes Jahr, Winter]");
+		flexTable.setWidget(0, 1, lblFrequenzContent);
+
+		Label lblBemerkung = new Label("Bemerkung:");
+		flexTable.setWidget(1, 0, lblBemerkung);
+
+		Label lblBemerkungcontent = new Label("[Bemerkung der Lehrveranstaltung]");
+		flexTable.setWidget(1, 1, lblBemerkungcontent);
+	}
+
+	private void fillData(Lehrveranstaltung lv) {
+		String headerText;
+		if (lv.getTitel().equals(lv.getEnglishTitle()))
+			headerText = lv.getTitel();
+		else
+			headerText = lv.getTitel() + " / " + lv.getEnglishTitle();
+		disclosurePanel.setHeader(new Label(headerText));
+	}
+
+}

@@ -1,0 +1,8 @@
+package de.unihannover.dbs.mth.client.view;
+
+import com.google.gwt.user.client.ui.Composite;
+
+
+public class LeftRightBorderTest extends Composite {
+
+}
